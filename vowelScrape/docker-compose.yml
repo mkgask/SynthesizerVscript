@@ -1,0 +1,10 @@
+version: "3"
+
+services:
+    node:
+        build:
+            context: .
+            dockerfile: dockerfile
+        tty: true
+        volumes:
+            - .:/home/node
