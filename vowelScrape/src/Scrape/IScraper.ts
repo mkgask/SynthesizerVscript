@@ -1,4 +1,4 @@
-import ScrapedData from './ScrapedData';
+import { ScrapedData } from './ScrapedData';
 
 
 
