@@ -13,5 +13,4 @@ class ScrapedData
 
 
 
-module.exports = ScrapedData;
-export default ScrapedData;
+export { ScrapedData };

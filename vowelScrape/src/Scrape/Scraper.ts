@@ -1,7 +1,7 @@
 import '../String.extensions';
 
 import { IScraper } from './IScraper';
-import ScrapedData from './ScrapedData';
+import { ScrapedData } from './ScrapedData';
 
 import fetch from 'node-fetch';
 import { access, readFile, writeFile } from 'fs/promises';
@@ -78,5 +78,4 @@ class Scraper implements IScraper
 
 
 
-module.exports = Scraper;
-export default Scraper;
+export { Scraper };
