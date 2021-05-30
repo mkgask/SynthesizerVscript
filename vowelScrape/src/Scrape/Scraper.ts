@@ -1,4 +1,5 @@
-import './string.extensions';
+import '../String.extensions';
+
 import IScraper from './IScraper';
 import ScrapedData from './ScrapedData';
 
@@ -14,7 +15,7 @@ const utf8 : BufferEncoding = 'utf8';
 
 class Scraper implements IScraper {
     url : string = 'https://www.coscom.co.jp/hiragana-katakana/kanatable-j.html';
-    cache_filepath : string = './src/scraped.html';
+    cache_filepath : string = './src/Scrape/scraped.html';
     scraped_html : ScrapedData = new ScrapedData();
 
     async scrape (url?: string) : Promise<ScrapedData> {
