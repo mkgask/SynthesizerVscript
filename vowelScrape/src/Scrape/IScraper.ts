@@ -10,7 +10,7 @@ interface IScraper {
     scrape(url?: string) : Promise<ScrapedData>;
 
     loadCache(filepath : string) : Promise<ScrapedData>;
-    saveCache(filepath : string, cache_data : string) : boolean;
+    saveCache(filepath : string, cache_data : string) : Promise<boolean>;
 }
 
 
