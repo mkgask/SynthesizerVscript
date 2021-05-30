@@ -8,8 +8,6 @@ import { access, readFile, writeFile } from 'fs/promises';
 import { constants } from 'fs';
 import { exception } from 'console';
 
-const utf8 : BufferEncoding = 'utf8';
-
 
 
 class Scraper implements IScraper {
