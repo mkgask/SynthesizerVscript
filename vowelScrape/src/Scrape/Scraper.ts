@@ -23,7 +23,11 @@ class Scraper implements IScraper {
         if (!url) throw exception('Scraper.scrape:21 Invalid url');
 
         // scraping start when failed load cache file
-        await this.loadCache(this.cache_filepath);
+        try {
+            await this.loadCache(this.cache_filepath);
+        } catch (err) {
+            throw err;
+        }
 
         if (this.scraped_html) this.saveCache(this.cache_filepath, this.scraped_html.value);
 

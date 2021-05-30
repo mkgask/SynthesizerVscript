@@ -6,6 +6,19 @@ import ScrapedData from './Scrape/ScrapedData';
 
 
 
+process.on('uncaughtException', (err) => {
+    console.error('uncaughtException : ', err);
+    process.abort();
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection at : Promise', promise);
+    console.error('Unhandled Rejection at : reason:', reason);
+    process.abort();
+})
+
+
+
 class Controller {
     async exec(scraper : IScraper) {
 
