@@ -2,9 +2,10 @@ import { ScrapedData } from './ScrapedData';
 
 
 
-interface IScraper {
+interface IScraper
+{
     url : string;
-    cache_filepath : string;
+    cache_filename : string;
     scraped_html : ScrapedData;
 
     scrape(url?: string) : Promise<ScrapedData>;
