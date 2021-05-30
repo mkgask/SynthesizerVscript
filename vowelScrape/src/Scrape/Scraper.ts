@@ -1,6 +1,6 @@
 import '../String.extensions';
 
-import IScraper from './IScraper';
+import { IScraper } from './IScraper';
 import ScrapedData from './ScrapedData';
 
 import fetch from 'node-fetch';
@@ -10,7 +10,8 @@ import { exception } from 'console';
 
 
 
-class Scraper implements IScraper {
+class Scraper implements IScraper
+{
     url : string = 'https://www.coscom.co.jp/hiragana-katakana/kanatable-j.html';
     cache_filepath : string = './src/Scrape/scraped.html';
     scraped_html : ScrapedData = new ScrapedData();

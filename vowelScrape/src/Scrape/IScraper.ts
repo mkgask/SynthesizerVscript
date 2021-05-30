@@ -15,4 +15,4 @@ interface IScraper {
 
 
 
-export default IScraper;
+export { IScraper };
