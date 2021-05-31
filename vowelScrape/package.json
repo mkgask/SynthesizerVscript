@@ -11,6 +11,7 @@
     "author": "@mkgask",
     "license": "MIT",
     "devDependencies": {
+        "@types/jasmine": "^3.7.6",
         "@types/jest": "^26.0.23",
         "@types/jsdom": "^16.2.10",
         "@types/node": "^15.0.2",
