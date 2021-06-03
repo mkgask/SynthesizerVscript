@@ -1,6 +1,7 @@
 import { access, readFile, writeFile } from 'fs/promises';
 import { constants } from 'fs';
-import { exception } from 'console';
+
+const utf8 : BufferEncoding = 'utf8';
 
 
 
@@ -39,20 +40,10 @@ class Cache
     {
         let cache_filepath = this.cache_filepath;
         if (!cache_filepath && cache_filename) { cache_filepath = this.createPath(Cache.cache_basepath, cache_filename); }
-        if (!cache_filepath) throw exception('Cache.load : Invalid cache_filepath');
+        if (!cache_filepath) throw new Error('Cache.load : Invalid cache_filepath');
 
-        try {
-            await access(cache_filepath, constants.R_OK);
-        } catch (err) {
-            throw err;
-        }
-
-        try {
-            this.cache_data = (await readFile(cache_filepath)).toString();
-        } catch (err) {
-            throw err;
-        }
-
+        await access(cache_filepath, constants.R_OK);
+        this.cache_data = (await readFile(cache_filepath, utf8)).toString();
         return this.cache_data;
     }
 
@@ -65,14 +56,9 @@ class Cache
     {
         let cache_filepath = this.cache_filepath;
         if (!cache_filepath && cache_filename) { cache_filepath = this.createPath(Cache.cache_basepath, cache_filename); }
-        if (!cache_filepath) throw exception('Cache.save : Invalid cache_filepath');
+        if (!cache_filepath) throw new Error('Cache.save : Invalid cache_filepath');
 
-        try {
-            await writeFile(cache_filepath, cache_data);
-        } catch (err) {
-            throw err;
-        }
-
+        await writeFile(cache_filepath, cache_data);
         return true;
     }
 
@@ -86,13 +72,16 @@ class Cache
         let index : number = 0;
         let first_slash : string = '';
 
-        for (let arg in args) {
+        for (let key in args) {
             index += 1;
 
-            if (!arg) { continue; }
+            const arg = args[key]
+            if (typeof arg === 'undefined') continue;
+
+            if (arg.length === 0) { continue; }
 
             if (index === 1 && arg.substr(0, 1) === '/') { first_slash = '/'; }
-            tmp.push(arg.replace(/^\/?.*\/?$/, ''));
+            tmp.push(arg.replace(/^\/?(.*)\/?$/, '$1'));
         }
 
         return first_slash + tmp.join('/');
