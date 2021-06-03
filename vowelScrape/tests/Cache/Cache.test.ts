@@ -27,32 +27,32 @@ const utf8 : BufferEncoding = 'utf8';
 
 
 describe('Cache', (): void => {
-    test('正常系テスト：インスタンス生成テスト', async (): Promise<void> => {
+    test('正常系テスト：インスタンス生成テスト', (): void => {
         const cache = new Cache('');
-        await expect(typeof cache).toBe('object');
-        await expect(cache.constructor.name).toBe('Cache');
+        expect(typeof cache).toBe('object');
+        expect(cache.constructor.name).toBe('Cache');
     });
 
-    test('正常系テスト：インスタンス生成時のファイルパス生成テスト', async (): Promise<void> => {
+    test('正常系テスト：インスタンス生成時のファイルパス生成テスト', (): void => {
         const cache2 = new Cache(test_cachename);
-        await expect(cache2.cache_filepath).toBe('./dst/' + test_cachename);
+        expect(cache2.cache_filepath).toBe('./dst/' + test_cachename);
     });
 
-    test('異常系テスト：インスタンス生成時に空のファイル名を渡すとパス生成しない', async (): Promise<void> => {
+    test('異常系テスト：インスタンス生成時に空のファイル名を渡すとパス生成しない', (): void => {
         const cache1 = new Cache('');
-        await expect(cache1.cache_filepath).toBe('');
+        expect(cache1.cache_filepath).toBe('');
     });
 
-    test('正常系テスト：resetメソッドによるファイルパス生成テスト', async (): Promise<void> => {
+    test('正常系テスト：resetメソッドによるファイルパス生成テスト', (): void => {
         const cache = new Cache('');
         cache.reset(test_cachename);
-        await expect(cache.cache_filepath).toBe('./dst/' + test_cachename);
+        expect(cache.cache_filepath).toBe('./dst/' + test_cachename);
     });
 
-    test('異常系テスト：resetメソッドに空のファイル名を渡すとパス生成しない', async (): Promise<void> => {
+    test('異常系テスト：resetメソッドに空のファイル名を渡すとパス生成しない', (): void => {
         const cache = new Cache('');
         cache.reset('');
-        await expect(cache.cache_filepath).toBe('');
+        expect(cache.cache_filepath).toBe('');
     });
 
     test('正常系テスト：loadメソッドによるキャッシュファイル読み込みテスト', async (): Promise<void> => {
@@ -60,11 +60,11 @@ describe('Cache', (): void => {
         const test_cachepath  = './dst/' + testcase_cachename;
         await writeFile(test_cachepath, test_cachedata);
         const test_loaddata = await readFile(test_cachepath, utf8);
-        await expect(test_loaddata).toBe(test_cachedata);
+        expect(test_loaddata).toBe(test_cachedata);
 
         const cache = new Cache('');
         const loaddata = await cache.load(testcase_cachename);
-        await expect(loaddata).toBe(test_cachedata);
+        expect(loaddata).toBe(test_cachedata);
 
         // 後片付け
         await unlink(test_cachepath);
