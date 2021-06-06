@@ -1,7 +1,8 @@
 import '#/String.extensions';
 
 import { Cache } from "#/Cache/Cache";
-import { access, readFile, writeFile, unlink } from 'fs/promises';
+import * as fs from 'fs/promises';
+//import { access, readFile, writeFile, unlink } from 'fs/promises';
 import { constants } from 'fs';
 
 
@@ -58,8 +59,8 @@ describe('Cache', (): void => {
     test('正常系テスト：loadメソッドによるキャッシュファイル読み込みテスト', async (): Promise<void> => {
         const testcase_cachename = test_cachename + testCaseId;
         const test_cachepath  = './dst/' + testcase_cachename;
-        await writeFile(test_cachepath, test_cachedata);
-        const test_loaddata = await readFile(test_cachepath, utf8);
+        await fs.writeFile(test_cachepath, test_cachedata);
+        const test_loaddata = await fs.readFile(test_cachepath, utf8);
         expect(test_loaddata).toBe(test_cachedata);
 
         const cache = new Cache('');
@@ -67,7 +68,7 @@ describe('Cache', (): void => {
         expect(loaddata).toBe(test_cachedata);
 
         // 後片付け
-        await unlink(test_cachepath);
+        await fs.unlink(test_cachepath);
     });
 
     test('異常系テスト：loadメソッドでキャッシュファイルが無い時例外エラーが出る', async (): Promise<void> => {
@@ -76,7 +77,7 @@ describe('Cache', (): void => {
         // await unlink(test_cachepath);    // そもそも作ってないので不要
 
         try {
-            await access(test_cachepath, constants.R_OK);
+            await fs.access(test_cachepath, constants.R_OK);
         } catch (err) {
             expect(err.toString()).toBe("Error: ENOENT: no such file or directory, access '" + test_cachepath + "'");
         }
@@ -90,37 +91,66 @@ describe('Cache', (): void => {
         }
     });
 
+/*
+    test('異常系テスト：loadメソッドでファイルの読み込みエラー', async (): Promise<void> => {
+        const testcase_cachename = test_cachename + testCaseId;
+        const test_cachepath  = './dst/' + testcase_cachename;
+        // await unlink(test_cachepath);    // そもそも作ってないので不要
+
+        try {
+            await fs.access(test_cachepath, constants.R_OK);
+        } catch (err) {
+            expect(err.toString()).toBe("Error: ENOENT: no such file or directory, access '" + test_cachepath + "'");
+        }
+
+        const spy = jest.spyOn(fs, 'readFile').mockImplementation(() => { throw new Error('File read error'); });
+        // TypeError: Cannot redefine property: readFile
+
+        const cache = new Cache('');
+
+        try {
+            await cache.load(testcase_cachename);
+        } catch (err) {
+            console.log(JSON.stringify(err));
+            //expect(err.toString()).toBe("Error: ENOENT: no such file or directory, access '" + test_cachepath + "'");
+            expect(err.toString()).toBe("File read error");
+        }
+
+        spy.mockRestore();
+    });
+*/
+
     test('正常系テスト：saveメソッドによるキャッシュファイル書き込みテスト', async (): Promise<void> => {
         const testcase_cachename = test_cachename + testCaseId;
         const test_cachepath  = './dst/' + testcase_cachename;
         // await unlink(test_cachepath);    // そもそも作ってないので不要
 
         try {
-            await access(test_cachepath, constants.R_OK);
+            await fs.access(test_cachepath, constants.R_OK);
         } catch (err) {
             expect(err.toString()).toBe("Error: ENOENT: no such file or directory, access '" + test_cachepath + "'");
         }
 
         const cache = new Cache('');
         await cache.save(test_cachedata, testcase_cachename);
-        const readdata = await readFile(test_cachepath, utf8);
+        const readdata = await fs.readFile(test_cachepath, utf8);
         expect(readdata).toBe(test_cachedata);
     });
 
     test('異常系テスト：saveメソッドでキャッシュファイルがあったら内容書き換え', async (): Promise<void> => {
         const testcase_cachename = test_cachename + testCaseId;
         const test_cachepath  = './dst/' + testcase_cachename;
-        await writeFile(test_cachepath, test_cachedata + test_cachedata);
-        const double_testdata = await readFile(test_cachepath, utf8);
+        await fs.writeFile(test_cachepath, test_cachedata + test_cachedata);
+        const double_testdata = await fs.readFile(test_cachepath, utf8);
         expect(double_testdata).toBe(test_cachedata + test_cachedata);
 
         const cache = new Cache('');
         await cache.save(testcase_cachename, test_cachedata);
-        const readdata = await readFile(test_cachepath, utf8);
+        const readdata = await fs.readFile(test_cachepath, utf8);
         expect(readdata).toBe(test_cachedata + test_cachedata);
 
         // 後片付け
-        await unlink(test_cachepath);
+        await fs.unlink(test_cachepath);
     });
 
     test('正常系テスト：createPathメソッドテスト', (): void => {
