@@ -5,8 +5,6 @@ import * as fs from 'fs/promises';
 //import { access, readFile, writeFile, unlink } from 'fs/promises';
 import { constants } from 'fs';
 
-
-
 let testCaseId : string = '';
 
 const reporter = {
@@ -140,12 +138,12 @@ describe('Cache', (): void => {
     test('異常系テスト：saveメソッドでキャッシュファイルがあったら内容書き換え', async (): Promise<void> => {
         const testcase_cachename = test_cachename + testCaseId;
         const test_cachepath  = './dst/' + testcase_cachename;
-        await fs.writeFile(test_cachepath, test_cachedata + test_cachedata);
+        await fs.writeFile(test_cachepath, test_cachedata);
         const double_testdata = await fs.readFile(test_cachepath, utf8);
-        expect(double_testdata).toBe(test_cachedata + test_cachedata);
+        expect(double_testdata).toBe(test_cachedata);
 
         const cache = new Cache('');
-        await cache.save(testcase_cachename, test_cachedata);
+        await cache.save(test_cachedata + test_cachedata, testcase_cachename);
         const readdata = await fs.readFile(test_cachepath, utf8);
         expect(readdata).toBe(test_cachedata + test_cachedata);
 
