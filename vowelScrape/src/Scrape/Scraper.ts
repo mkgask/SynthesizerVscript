@@ -30,6 +30,7 @@ class Scraper implements IScraper
         if (!this.scraped_html.value) {
             try {
                 this.scraped_html.value = await (await fetch(url)).text();
+                console.log('fetch(url) access to : ' + url);
             } catch (err) {
                 throw err;
             }
