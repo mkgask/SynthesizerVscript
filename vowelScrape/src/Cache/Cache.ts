@@ -39,7 +39,7 @@ class Cache
     async load(cache_filename? : string) : Promise<string>
     {
         let cache_filepath = this.cache_filepath;
-        if (!cache_filepath && cache_filename) { cache_filepath = this.createPath(Cache.cache_basepath, cache_filename); }
+        if (cache_filename) { cache_filepath = this.createPath(Cache.cache_basepath, cache_filename); }
         if (!cache_filepath) throw new Error('Cache.load : Invalid cache_filepath');
 
         await access(cache_filepath, constants.R_OK);
@@ -55,7 +55,7 @@ class Cache
     async save(cache_data : string, cache_filename? : string) : Promise<boolean>
     {
         let cache_filepath = this.cache_filepath;
-        if (!cache_filepath && cache_filename) { cache_filepath = this.createPath(Cache.cache_basepath, cache_filename); }
+        if (cache_filename) { cache_filepath = this.createPath(Cache.cache_basepath, cache_filename); }
         if (!cache_filepath) throw new Error('Cache.save : Invalid cache_filepath');
 
         await writeFile(cache_filepath, cache_data);
