@@ -3,6 +3,7 @@
     "version": "0.0.1",
     "description": "",
     "main": "dst/index.js",
+    "test": "jest",
     "scripts": {
         "exec": "npx ts-node src/index.ts",
         "compile": "npx tsc src/index.ts --outFile dst/index.js --module commonjs",
