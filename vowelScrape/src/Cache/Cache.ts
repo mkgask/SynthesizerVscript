@@ -67,7 +67,8 @@ class Cache
     /*  Utilities
     */
 
-    createPath(...args : (string | undefined)[]) : string {
+    createPath(...args : (string | undefined)[]) : string
+    {
         let tmp : Array<string> = [];
         let index : number = 0;
         let first_slash : string = '';

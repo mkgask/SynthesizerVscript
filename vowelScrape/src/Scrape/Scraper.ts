@@ -16,7 +16,8 @@ class Scraper implements IScraper
     scraped_html : ScrapedData = new ScrapedData();
     cache : Cache = new Cache(this.cache_filename);
 
-    async scrape (url?: string) : Promise<ScrapedData> {
+    async scrape (url?: string) : Promise<ScrapedData>
+    {
         if (!url && this.url) { url = this.url; }
         if (!url) { throw exception('Scraper.scrape : Invalid url'); }
 
@@ -27,29 +28,33 @@ class Scraper implements IScraper
             throw err;
         }
 
-        if (!this.scraped_html.value) {
-            try {
-                this.scraped_html.value = await (await fetch(url)).text();
-                console.log('fetch(url) access to : ' + url);
-            } catch (err) {
-                throw err;
-            }
+        if (this.scraped_html.value) {
+            return this.scraped_html;
+        }
 
-            if (this.scraped_html) {
-                this.saveCache(this.cache_filename, this.scraped_html.value);
-            }
+        try {
+            this.scraped_html.value = await (await fetch(url)).text();
+            console.log('fetch(url) access to : ' + url);
+        } catch (err) {
+            throw err;
+        }
+
+        if (this.scraped_html.value) {
+            this.saveCache(this.cache_filename, this.scraped_html.value);
         }
 
         return this.scraped_html;
     }
 
-    async loadCache(cache_filename : string) : Promise<ScrapedData> {
+    async loadCache(cache_filename : string) : Promise<ScrapedData>
+    {
         const cache_data = await this.cache.load(cache_filename);
         this.scraped_html.value = cache_data;
         return this.scraped_html;
     }
 
-    async saveCache(cache_filename : string, cache_data : string) : Promise<boolean> {
+    async saveCache(cache_filename : string, cache_data : string) : Promise<boolean>
+    {
         await this.cache.save(cache_data, cache_filename);
         return true;
     }
