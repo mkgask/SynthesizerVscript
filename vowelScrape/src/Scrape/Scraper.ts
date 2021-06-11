@@ -1,5 +1,5 @@
 import '../String.extensions';
-import { Cache } from '#/Cache/Cache';
+import { Cache } from '../Cache/Cache';
 
 import { IScraper } from './IScraper';
 import { ScrapedData } from './ScrapedData';
@@ -25,7 +25,7 @@ class Scraper implements IScraper
         try {
             await this.loadCache(this.cache_filename);
         } catch (err) {
-            throw err;
+            // throw err;    // キャシュがロード出来なくても処理は問題ないので握りつぶしてOK
         }
 
         if (this.scraped_html.value) {
