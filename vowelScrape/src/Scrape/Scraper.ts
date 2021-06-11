@@ -5,25 +5,32 @@ import { IScraper } from './IScraper';
 import { ScrapedData } from './ScrapedData';
 
 import fetch from 'node-fetch';
-import { exception } from 'console';
 
 
 
 class Scraper implements IScraper
 {
-    url : string = 'https://www.coscom.co.jp/hiragana-katakana/kanatable-j.html';
+    url : string = '';
     cache_filename : string = 'scraped.html';
     scraped_html : ScrapedData = new ScrapedData();
-    cache : Cache = new Cache(this.cache_filename);
+    cache? : Cache = undefined;
 
-    async scrape (url?: string) : Promise<ScrapedData>
+    async scrape (url: string, cache_filename: string) : Promise<ScrapedData>
     {
         if (!url && this.url) { url = this.url; }
-        if (!url) { throw exception('Scraper.scrape : Invalid url'); }
+        if (!url) { throw Error('Scraper.scrape : Invalid url'); }
+
+        if (!cache_filename && this.cache_filename) {
+            cache_filename = this.cache_filename;
+        }
+
+        if (!cache_filename) { throw Error('Scraper.scrape : Invalid cache filename'); }
+
+        this.cache = new Cache(cache_filename);
 
         // scraping start when failed load cache file
         try {
-            await this.loadCache(this.cache_filename);
+            await this.loadCache(cache_filename);
         } catch (err) {
             // throw err;    // キャシュがロード出来なくても処理は問題ないので握りつぶしてOK
         }
@@ -40,7 +47,7 @@ class Scraper implements IScraper
         }
 
         if (this.scraped_html.value) {
-            this.saveCache(this.cache_filename, this.scraped_html.value);
+            this.saveCache(cache_filename, this.scraped_html.value);
         }
 
         return this.scraped_html;
@@ -48,6 +55,8 @@ class Scraper implements IScraper
 
     async loadCache(cache_filename : string) : Promise<ScrapedData>
     {
+        if (!this.cache) { throw Error('Invalid cache instance'); }
+
         const cache_data = await this.cache.load(cache_filename);
         this.scraped_html.value = cache_data;
         return this.scraped_html;
@@ -55,6 +64,8 @@ class Scraper implements IScraper
 
     async saveCache(cache_filename : string, cache_data : string) : Promise<boolean>
     {
+        if (!this.cache) { throw Error('Invalid cache instance'); }
+
         await this.cache.save(cache_data, cache_filename);
         return true;
     }

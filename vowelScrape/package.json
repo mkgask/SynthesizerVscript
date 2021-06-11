@@ -5,7 +5,9 @@
     "main": "dst/index.js",
     "test": "jest",
     "scripts": {
-        "exec": "npx ts-node src/index.ts",
+        "jp": "npx ts-node src/jp.ts",
+        "ch": "npx ts-node src/ch.ts",
+        "en": "npx ts-node src/en.ts",
         "compile": "npx tsc src/index.ts --outFile dst/index.js --module commonjs",
         "test": "jest --config jest.config.json"
     },

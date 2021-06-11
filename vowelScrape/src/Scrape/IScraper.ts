@@ -9,9 +9,9 @@ interface IScraper
     url : string;
     cache_filename : string;
     scraped_html : ScrapedData;
-    cache : Cache;
+    cache? : Cache;
 
-    scrape(url?: string) : Promise<ScrapedData>;
+    scrape(url: string, cache_filename: string) : Promise<ScrapedData>;
 
     loadCache(filepath : string) : Promise<ScrapedData>;
     saveCache(filepath : string, cache_data : string) : Promise<boolean>;
