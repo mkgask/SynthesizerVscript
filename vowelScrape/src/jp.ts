@@ -179,7 +179,7 @@ class Controller {
     // edit ok
     getVowel(phoneme: string) : string
     {
-        const phoneme2 = phoneme.replace(/ (\w+)$/, '');
+        const phoneme2 = phoneme.replace(/ \(\w+\)$/, '');
         const phoneme3 = phoneme2.substr(-1);
         return phoneme3;
     }
