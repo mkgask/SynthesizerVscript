@@ -79,6 +79,13 @@ class Controller {
                 // ひらがな
                 35,  36,    // やゆよ
                 43,  44,    // わをん
+                // カタカナ
+                139, 140,    // ヤユヨ
+                147, 148,    // ワヲン
+            ];
+
+            const space2_list = [
+                // ひらがな
                 71,  72,    // きゃきゅきょ
                 74,  75,    // しゃしゅしょ
                 77,  78,    // ちゃちゅちょ
@@ -91,8 +98,6 @@ class Controller {
                 98,  99,    // びゃびゅびょ
                 101, 102,    // ぴゃぴゅぴょ
                 // カタカナ
-                139, 140,    // ヤユヨ
-                147, 148,    // ワヲン
                 175, 176,    // キャキュキョ
                 178, 179,    // シャシュショ
                 181, 182,    // チャチュチョ
@@ -108,6 +113,7 @@ class Controller {
 
             const indentspace4 = '    ';
             const space = '              ';
+            const space2 = '            ';
 
             let return_string : string = 'local vowel_table = {\n' + indentspace4;
             let linefeed = 0;
@@ -115,13 +121,18 @@ class Controller {
 
             for (let i = 0; i < hirakata_length; i += 1) {
                 const hk = hirakata[i];
-                const rm = romaji_list[i];    // TODO: rmから母音のみ取り出す処理が必要
+                const rm = romaji_list[i];
                 //return_string += i + ': ["' + hk + '"] = ' + '"' + rm + '"';    // to debug run
                 return_string += '["' + hk + '"] = ' + '"' + this.getVowel(rm) + '",';
                 linefeed += 1;
 
                 if (space1_list.includes(i)) {
                     return_string += space;
+                    linefeed += 1;
+                }
+
+                if (space2_list.includes(i)) {
+                    return_string += space2;
                     linefeed += 1;
                 }
 
