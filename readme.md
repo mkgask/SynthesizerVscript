@@ -19,12 +19,26 @@ MMDで使う表情モーション用のvmdファイルを出力
 Output vmd file for facial expression motion used in MMD.
 
 
+
+
+
 <!--
 # Script usage - スクリプトの使い方
 
-1. リリースページからzipファイルをダウンロードしてください。
+1. リリースページからzipファイルをダウンロード・解答してください。
+1. libsフォルダをSynthesizer Vの実行ファイルがあるパスにコピーしてください。
 1. SynthVtoLabフォルダまたはSynthVtoVmdフォルダをSynthesiver Vのscriptフォルダへコピーしてください。
-1. Synthesizer Vを起動すると、上部メニューのスクリプトに「SynthV to Lab」と「SynthV to Vmd」が増えているので、用途に合わせてご利用ください。
+1. Synthesizer Vを起動すると、上部メニューのスクリプトに「SynthV to Lab」か「SynthV to Vmd」または両方が増えているので、用途に合わせてご利用ください。
 
-*単体でも動きます*
+
+
+## Reference  --  参考文献
+
+AoiSaya/FlashAir_UTF8toSJIS: FlashAir library to convert from UTF-8 to Shift _ JIS
+https://github.com/AoiSaya/FlashAir_UTF8toSJIS/
+
+日本語を含むファイルパスへの保存に使わせていただきました
+
+I used it to save to a file path including Japanese
+
 -->

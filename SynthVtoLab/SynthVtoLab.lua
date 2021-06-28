@@ -131,8 +131,9 @@ function main()
     local log_path = synth_v_to_lab.log_path
     SV: showMessageBox("main()", "log_path : " .. log_path)
     SV: showMessageBox("main()", "synth_v_to_lab.project_path : " .. synth_v_to_lab.project_path)
+    SV: showMessageBox("main()", "UTF8toSJIS_table_path : " .. UTF8toSJIS_table_path)
 
-    local UTF8toSJIS_table = io.open(UTF8toSJIS_table_path, "r")
+    local UTF8toSJIS_table = io.open(UTF8toSJIS_table_path, "rb")
     SV: showMessageBox("UTF8toSJIS:UTF8_to_SJIS_str_cnv()", "UTF8toSJIS_table == nil : " .. tostring(UTF8toSJIS_table == nil))
 
     local log_path_sjis = UTF8toSJIS:UTF8_to_SJIS_str_cnv(UTF8toSJIS_table, log_path)
@@ -142,24 +143,24 @@ function main()
 
 
 
-    if not (0 < #project_filename) then
+    if not (0 < #synth_v_to_lab.project_path) then
         SV: showMessageBox("!", "プロジェクトを開いてください。")
         return SV: finish()
     end
 
-    if not (0 < #tracks) then
+    if not (0 < #synth_v_to_lab.tracks) then
         SV: showMessageBox("!", "トラックを作成してください。")
         return SV: finish()
     end
 
-    for index, track in ipairs(tracks) do
+    for index, track in ipairs(synth_v_to_lab.tracks) do
         SV: showMessageBox("main()", "track name : " .. track: getName())
     end
 
-    local current_track_order = getCurrentTrackDisplayOrder(main_editor)
+    local current_track_order = getCurrentTrackDisplayOrder(synth_v_to_lab.main_editor)
     SV: showMessageBox("main()", "current track number : " .. tostring(current_track_order))
 
-    local result_start_dialog = showStartDialog(tracks, current_track_order)
+    local result_start_dialog = showStartDialog(synth_v_to_lab.tracks, current_track_order)
 
     if result_start_dialog.status == false then
         do return end
@@ -193,8 +194,8 @@ SynthVtoLab = {
 
         local project_path = project: getFileName()
         local project_path_windows = self.changePathToWindows(project_path)
-        local lab_path = self.changePathExt(project_path_windows, 'lab')
-        local log_path = self.changePathExt(project_path_windows, 'log')
+        local lab_path = project_path and self.changePathExt(project_path_windows, 'lab') or ''
+        local log_path = project_path and self.changePathExt(project_path_windows, 'log') or ''
 
         -- Properties
         local obj = {
@@ -233,7 +234,7 @@ SynthVtoLab = {
     end,
 
     changePathToWindows = function (path)
-        local path = string.gsub(path, '/', '\\')
+        local path = string.gsub(path, '\\', '/')
         return path
     end
 }
@@ -299,7 +300,7 @@ end
 
 --- https://github.com/AoiSaya/FlashAir_UTF8toSJIS/
 
-UTF8toSJIS_table_path = "Utf8Sjis.tbl"
+UTF8toSJIS_table_path = "libs/Utf8Sjis.tbl"
 
 --[[
     UTF8toSJIS.lua - for FlashAir
@@ -396,7 +397,7 @@ function UTF8toSJIS:UTF8_to_SJIS_str_cnv(f2, strUTF8)
         -- sleep(0)
     end
 
-    local r = string.char(unpack(sjis_byte)), sj_cnt-1
+    local r = string.char(table.unpack(sjis_byte)), sj_cnt-1
 
     SV: showMessageBox("UTF8toSJIS:UTF8_to_SJIS_str_cnv()", "r : " .. tostring(r: len()))
 
