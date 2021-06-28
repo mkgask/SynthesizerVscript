@@ -1,0 +1,6 @@
+
+参考サイト
+Reference site
+
+AoiSaya/FlashAir_UTF8toSJIS: FlashAir library to convert from UTF-8 to Shift _ JIS
+https://github.com/AoiSaya/FlashAir_UTF8toSJIS/
