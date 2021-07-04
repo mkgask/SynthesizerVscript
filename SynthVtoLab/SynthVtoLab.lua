@@ -93,8 +93,8 @@ function getTranslations(langCode)
             { "Output *.lab file for PSDToolkit", "PSDToolkit用の*.labファイルを出力" },
             { "Output", "出力" },
 
-            { "Select track", "出力トラック選択" },
-            { "track", "トラック" },
+            { "Output settings track", "出力設定" },
+            { "Select track", "出力するトラックを選択" },
 
             { "test text", "テストテキスト" },
             { "test text 2", "テストテキスト 2" }
@@ -128,20 +128,6 @@ function main()
     -- finish
 
     local synth_v_to_lab = SynthVtoLab: new()
-    local log_path = synth_v_to_lab.log_path
-    SV: showMessageBox("main()", "log_path : " .. log_path)
-    SV: showMessageBox("main()", "synth_v_to_lab.project_path : " .. synth_v_to_lab.project_path)
-    SV: showMessageBox("main()", "UTF8toSJIS_table_path : " .. UTF8toSJIS_table_path)
-
-    local UTF8toSJIS_table = io.open(UTF8toSJIS_table_path, "rb")
-    SV: showMessageBox("UTF8toSJIS:UTF8_to_SJIS_str_cnv()", "UTF8toSJIS_table == nil : " .. tostring(UTF8toSJIS_table == nil))
-
-    local log_path_sjis = UTF8toSJIS:UTF8_to_SJIS_str_cnv(UTF8toSJIS_table, log_path)
-    local logfile = io.open(log_path_sjis, "w")
-    logfile: write("log_path : " .. log_path)
-    logfile: close()
-
-
 
     if not (0 < #synth_v_to_lab.project_path) then
         SV: showMessageBox("!", "プロジェクトを開いてください。")
@@ -153,14 +139,22 @@ function main()
         return SV: finish()
     end
 
+    local log = Log: new(synth_v_to_lab.log_path)
+    log: w("synth_v_to_lab.project_path : " .. synth_v_to_lab.project_path)
+
     for index, track in ipairs(synth_v_to_lab.tracks) do
-        SV: showMessageBox("main()", "track name : " .. track: getName())
+        log: w("track" .. index .. " : " .. track: getName())
     end
 
-    local current_track_order = getCurrentTrackDisplayOrder(synth_v_to_lab.main_editor)
-    SV: showMessageBox("main()", "current track number : " .. tostring(current_track_order))
+    log: w("current track number : " .. tostring(synth_v_to_lab.current_track))
 
-    local result_start_dialog = showStartDialog(synth_v_to_lab.tracks, current_track_order)
+    log: start()
+    log: close()
+
+    local output_dialog = OutputSettingsDialog: new(synth_v_to_lab.tracks, synth_v_to_lab.current_track)
+    output_dialog: show()
+--[[
+    local result_start_dialog = showStartDialog(synth_v_to_lab.tracks, synth_v_to_lab.current_track)
 
     if result_start_dialog.status == false then
         do return end
@@ -175,18 +169,19 @@ function main()
     if result_end_dialog.status == false then
         do return end
     end
-
+]]
     SV: finish()
 end
 
 
 
--- # Modules
+-- # Modules main
 
 SynthVtoLab = {
+
     -- Foundation
+
     new = function (self)
-    
         local project = SV: getProject()
         local main_editor = SV: getMainEditor()
         local tracks = self.getTracks(project)
@@ -212,6 +207,7 @@ SynthVtoLab = {
     end,
 
     -- Modules track
+
     getTracks =  function (project)
         local track_num = project: getNumTracks()
         local tracks = {}
@@ -227,7 +223,8 @@ SynthVtoLab = {
         return main_editor: getCurrentTrack(): getDisplayOrder()
     end,
 
-    --path
+    -- Modules path
+
     changePathExt = function (path, ext)
         local path = string.gsub(path, '%.svp$', '.' .. ext)
         return path
@@ -240,15 +237,107 @@ SynthVtoLab = {
 }
 
 
---- Show start dialog to OkCandelDialog
---- Track select dialog with input output filename.
---- @param tracks table
---- @param current_track_order any
---- @return any    -- return check result, ok or cancel
-function showStartDialog(tracks, current_track_order)
-    local param = getStartDialogParameter(tracks, current_track_order)
-    return SV: showCustomDialog(param)
-end
+
+-- # Modules log
+
+Log = {
+
+    -- Foundation
+
+    new = function (self, log_path)
+        local UTF8toSJIS_table = io.open(UTF8toSJIS_table_path, "rb")
+        local log_path_sjis = UTF8toSJIS:UTF8_to_SJIS_str_cnv(UTF8toSJIS_table, log_path)
+
+        local obj = {
+            log_path = log_path,
+            log_path_sjis = log_path_sjis,
+            log_start = false,
+            pre_log = "",
+            logfile = nil
+        }
+
+        return setmetatable(obj, { __index = self })
+    end,
+
+    start = function (self)
+        self.log_start = true
+        self.logfile = io.open(self.log_path_sjis, "w")
+
+        if (0 < #self.pre_log) then
+            self.logfile: write(self.pre_log)
+        end
+    end,
+
+    close = function (self)
+        self.logfile: close()
+    end,
+
+    -- Modules
+
+    w = function (self, value)
+        if (self.log_start) then
+            return self.logfile: write('[' .. self.t() .. '] ' .. tostring(value) .. "\n")
+        end
+
+        self.pre_log = self.pre_log .. '[' .. self.t() .. '] ' .. tostring(value) .. "\n";
+    end,
+
+    t = function (self)
+        return os.date("%Y-%m-%d %H:%M:%S")
+    end
+}
+
+
+-- # Modules output settings dialog
+
+OutputSettingsDialog = {
+
+    -- Foundation
+
+    new = function (self, tracks, current_order)
+        -- Properties
+        local obj = {
+            tracks = tracks,
+            current_order = current_order
+        }
+
+        return setmetatable(obj, { __index = self })
+    end,
+
+    -- Modules
+
+    show = function (self)
+        local dialog_parameters = self: getParameters()
+        SV:showCustomDialog(dialog_parameters)
+    end,
+
+    getParameters = function (self)
+        local choices = {}
+
+        for index, track in ipairs(self.tracks) do
+            table.insert(choices, index, "track" .. tostring(index) .. ' : ' .. track: getName())
+        end
+
+        local param = {
+            title = SV: T("Output settings track"),
+            message = "",
+            buttons = "OkCancel",
+
+            widgets = {
+                {
+                    name = "track",
+                    type = "ComboBox",
+                    label = SV: T("Select track"),
+                    default = self.current_order - 1,
+                    choices = choices
+                }
+            }
+        }
+    
+        return param
+    end
+}
+
 
 
 --- Show end dialog to OkCandelDialog
@@ -260,43 +349,7 @@ end
 
 
 
--- # Utilities
-
-
-function getStartDialogParameter(tracks, current_track_order)
-    local choices = {}
-    local current_number = 0
-
-    for index = 1, tracks.length do
-        choices[index] = "track" + tostring(index)
-
-        if tracks[index].getDisplayOrder() == current_track_order then
-            current_number = index
-        end
-    end
-
-    local param = {
-        title = SV.T("Select track"),
-        message = "",
-        buttons = "OkCancel",
-
-        widgets = {
-            {
-                name = "track",
-                type = "ComboBox",
-                label = SV.T("track"),
-                default = current_number,
-                choices = choices
-            }
-        }
-    }
-
-    return param
-end
-
-
-
--- # Modules UTF8toSJIS
+-- # Utilities UTF8toSJIS
 
 --- https://github.com/AoiSaya/FlashAir_UTF8toSJIS/
 
@@ -351,11 +404,6 @@ function UTF8toSJIS:UTF8_to_SJIS_str_cnv(f2, strUTF8)
     local SJ1, SJ2
     local sjis_byte = {}
     local str_length = strUTF8: len()
-    SV: showMessageBox("UTF8toSJIS:UTF8_to_SJIS_str_cnv()", "str_length : " .. tostring(str_length))
-    SV: showMessageBox("UTF8toSJIS:UTF8_to_SJIS_str_cnv()", "f2 == nil : " .. tostring(f2 == nil))
-
---    local UTF8SJIS_file = "Utf8Sjis.tbl"
---    local f2 = io.open(UTF8SJIS_file, "r")
 
     if f2 == nil then
         return nil
@@ -398,9 +446,6 @@ function UTF8toSJIS:UTF8_to_SJIS_str_cnv(f2, strUTF8)
     end
 
     local r = string.char(table.unpack(sjis_byte)), sj_cnt-1
-
-    SV: showMessageBox("UTF8toSJIS:UTF8_to_SJIS_str_cnv()", "r : " .. tostring(r: len()))
-
     return r
 end
 
