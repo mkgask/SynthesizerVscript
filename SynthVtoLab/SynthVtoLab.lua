@@ -94,7 +94,9 @@ function getTranslations(langCode)
             { "Output", "出力" },
 
             { "Output settings track", "出力設定" },
+            { "It will be saved in the same directory as the project file.", "プロジェクトファイルと同じディレクトリに保存されます" },
             { "Select track", "出力するトラックを選択" },
+            { "Output log together", "ログも一緒に出力する" },
 
             { "test text", "テストテキスト" },
             { "test text 2", "テストテキスト 2" }
@@ -127,34 +129,37 @@ function main()
     -- Convert notes consonant to lab file
     -- finish
 
-    local synth_v_to_lab = SynthVtoLab: new()
+    local synthv_to_lab = SynthVtoLab: new()
 
-    if not (0 < #synth_v_to_lab.project_path) then
-        SV: showMessageBox("!", "プロジェクトを開いてください。")
+    if not synthv_to_lab: precheck() then
         return SV: finish()
     end
 
-    if not (0 < #synth_v_to_lab.tracks) then
-        SV: showMessageBox("!", "トラックを作成してください。")
-        return SV: finish()
-    end
+    local log = Log: new(synthv_to_lab.log_path)
+    log: w("synthv_to_lab.project_path : " .. synthv_to_lab.project_path)
 
-    local log = Log: new(synth_v_to_lab.log_path)
-    log: w("synth_v_to_lab.project_path : " .. synth_v_to_lab.project_path)
-
-    for index, track in ipairs(synth_v_to_lab.tracks) do
+    for index, track in ipairs(synthv_to_lab.tracks) do
         log: w("track" .. index .. " : " .. track: getName())
     end
 
-    log: w("current track number : " .. tostring(synth_v_to_lab.current_track))
+    log: w("current track number : " .. tostring(synthv_to_lab.current_track))
 
-    log: start()
-    log: close()
+    local output_dialog = OutputSettingsDialog: new(synthv_to_lab.tracks, synthv_to_lab.current_track)
+    local output_dialog_result = output_dialog: show()
 
-    local output_dialog = OutputSettingsDialog: new(synth_v_to_lab.tracks, synth_v_to_lab.current_track)
-    output_dialog: show()
+    if not output_dialog_result.status == "Yes" then
+        return SV: finish()
+    end
+
+    if (output_dialog_result.answers.logsave) then
+        log: w("log start")
+        log: start()
+    else
+        log: disable()
+    end
+
 --[[
-    local result_start_dialog = showStartDialog(synth_v_to_lab.tracks, synth_v_to_lab.current_track)
+    local result_start_dialog = showStartDialog(synthv_to_lab.tracks, synthv_to_lab.current_track)
 
     if result_start_dialog.status == false then
         do return end
@@ -170,6 +175,8 @@ function main()
         do return end
     end
 ]]
+
+    log: close()
     SV: finish()
 end
 
@@ -190,7 +197,7 @@ SynthVtoLab = {
         local project_path = project: getFileName()
         local project_path_windows = self.changePathToWindows(project_path)
         local lab_path = project_path and self.changePathExt(project_path_windows, 'lab') or ''
-        local log_path = project_path and self.changePathExt(project_path_windows, 'log') or ''
+        local log_path = project_path and self.changePathExt(project_path_windows, 'synthv2lab.log') or ''
 
         -- Properties
         local obj = {
@@ -204,6 +211,20 @@ SynthVtoLab = {
         }
 
         return setmetatable(obj, { __index = self })
+    end,
+
+    precheck = function (self)
+        if not (0 < #self.project_path) then
+            SV: showMessageBox("!", "プロジェクトを開いてください。")
+            return false
+        end
+
+        if not (0 < #self.tracks) then
+            SV: showMessageBox("!", "トラックを作成してください。")
+            return false
+        end
+
+        return true
     end,
 
     -- Modules track
@@ -246,14 +267,21 @@ Log = {
 
     new = function (self, log_path)
         local UTF8toSJIS_table = io.open(UTF8toSJIS_table_path, "rb")
-        local log_path_sjis = UTF8toSJIS:UTF8_to_SJIS_str_cnv(UTF8toSJIS_table, log_path)
+        -- local log_path_sjis = UTF8toSJIS:UTF8_to_SJIS_str_cnv(UTF8toSJIS_table, log_path)
+
+        local log_path_sjis = log_path
+
+        if not UTF8toSJIS_table == nil then
+            log_path_sjis = UTF8toSJIS:UTF8_to_SJIS_str_cnv(UTF8toSJIS_table, log_path)
+        end
 
         local obj = {
             log_path = log_path,
             log_path_sjis = log_path_sjis,
             log_start = false,
             pre_log = "",
-            logfile = nil
+            logfile = nil,
+            enable = true
         }
 
         return setmetatable(obj, { __index = self })
@@ -269,12 +297,29 @@ Log = {
     end,
 
     close = function (self)
-        self.logfile: close()
+        if not self.logfile == nil then
+            self.logfile: close()
+        end
+    end,
+
+    disable = function (self)
+        self: close()
+
+        self.log_path = ""
+        self.log_path_sjis = ""
+        self.log_start = false
+        self.pre_log = ""
+        self.logfile = nil
+        self.enable = false
     end,
 
     -- Modules
 
     w = function (self, value)
+        if not self.enable == true then
+            return
+        end
+
         if (self.log_start) then
             return self.logfile: write('[' .. self.t() .. '] ' .. tostring(value) .. "\n")
         end
@@ -308,7 +353,7 @@ OutputSettingsDialog = {
 
     show = function (self)
         local dialog_parameters = self: getParameters()
-        SV:showCustomDialog(dialog_parameters)
+        return SV:showCustomDialog(dialog_parameters)
     end,
 
     getParameters = function (self)
@@ -320,7 +365,7 @@ OutputSettingsDialog = {
 
         local param = {
             title = SV: T("Output settings track"),
-            message = "",
+            message = SV: T("It will be saved in the same directory as the project file."),
             buttons = "OkCancel",
 
             widgets = {
@@ -330,6 +375,13 @@ OutputSettingsDialog = {
                     label = SV: T("Select track"),
                     default = self.current_order - 1,
                     choices = choices
+                },
+
+                {
+                  name = "logsave",
+                  type = "CheckBox",
+                  text = SV: T("Output log together"),
+                  default = false
                 }
             }
         }
