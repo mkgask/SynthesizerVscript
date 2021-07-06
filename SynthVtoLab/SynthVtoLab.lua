@@ -98,8 +98,7 @@ function getTranslations(langCode)
             { "Select track", "出力するトラックを選択" },
             { "Output log together", "ログも一緒に出力する" },
 
-            { "test text", "テストテキスト" },
-            { "test text 2", "テストテキスト 2" }
+            { "Failed  open logfile", "ログファイルが開けませんでした" }
         }
     end
 
@@ -147,7 +146,7 @@ function main()
     local output_dialog = OutputSettingsDialog: new(synthv_to_lab.tracks, synthv_to_lab.current_track)
     local output_dialog_result = output_dialog: show()
 
-    if not output_dialog_result.status == "Yes" then
+    if not output_dialog_result.status then
         return SV: finish()
     end
 
@@ -267,11 +266,9 @@ Log = {
 
     new = function (self, log_path)
         local UTF8toSJIS_table = io.open(UTF8toSJIS_table_path, "rb")
-        -- local log_path_sjis = UTF8toSJIS:UTF8_to_SJIS_str_cnv(UTF8toSJIS_table, log_path)
-
         local log_path_sjis = log_path
 
-        if not UTF8toSJIS_table == nil then
+        if UTF8toSJIS_table then
             log_path_sjis = UTF8toSJIS:UTF8_to_SJIS_str_cnv(UTF8toSJIS_table, log_path)
         end
 
@@ -284,12 +281,31 @@ Log = {
             enable = true
         }
 
+        if not UTF8toSJIS_table then
+            if SV: getHostInfo().languageCode == "ja-JP" then
+                SV: showMessageBox("!", [[
+日本語ファイルパスを扱うためのデータファイルが読み込まれていません
+
+プロジェクトファイルのパスに日本語が含まれている場合、ログ出力を行うことができません
+
+必要な場合はlibsフォルダをSynthesizer V実行ファイルのあるフォルダに設置してください
+                ]])
+
+                obj.enable = false
+            end
+        end
+
         return setmetatable(obj, { __index = self })
     end,
 
     start = function (self)
         self.log_start = true
         self.logfile = io.open(self.log_path_sjis, "w")
+
+        if self.logfile == nil then
+            SV: showMessageBox("!", SV: T("Failed open logfile : " .. self.log_path_sjis))
+            return self.disable()
+        end
 
         if (0 < #self.pre_log) then
             self.logfile: write(self.pre_log)
