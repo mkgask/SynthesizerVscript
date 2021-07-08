@@ -98,6 +98,8 @@ function getTranslations(langCode)
             { "Select track", "出力するトラックを選択" },
             { "Output log together", "ログも一緒に出力する" },
 
+            { "all: all track", "all: 全トラック" },
+
             { "Failed  open logfile", "ログファイルが開けませんでした" }
         }
     end
@@ -381,7 +383,7 @@ OutputSettingsDialog = {
             table.insert(choices, index, "track" .. tostring(index) .. ' : ' .. track: getName())
         end
 
-        table.insert(choices, 1, "all: 全トラック")
+        table.insert(choices, 1, SV: T("all: all track"))
 
         local param = {
             title = SV: T("Output settings track"),
