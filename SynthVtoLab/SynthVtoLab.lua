@@ -148,6 +148,9 @@ function main()
 
     local select_track = output_dialog_result.answers.track
     -- log: w("select track number : " .. tostring(select_track))
+    synthv_to_lab: writeLog("select track number : " .. tostring(select_track))
+    synthv_to_lab: writeLog("synthv_to_lab.choices : " .. tostring(synthv_to_lab.output_dialog.choices))
+    synthv_to_lab: writeLog("synthv_to_lab.choices[select_track] : " .. tostring(synthv_to_lab.output_dialog.choices[select_track]))
 
 --[[
     local result_start_dialog = showStartDialog(synthv_to_lab.tracks, synthv_to_lab.current_track)
@@ -199,7 +202,8 @@ SynthVtoLab = {
             project_path = project_path_windows,
             lab_path = lab_path,
             log_path = log_path,
-            log = nil
+            log = nil,
+            output_dialog = nil
         }
 
         return setmetatable(obj, { __index = self })
@@ -220,8 +224,8 @@ SynthVtoLab = {
     end,
 
     showOutputSettingsDialog = function (self)
-        local output_dialog = OutputSettingsDialog: new(self.tracks, self.current_track)
-        return output_dialog: show()
+        self.output_dialog = OutputSettingsDialog: new(self.tracks, self.current_track)
+        return self.output_dialog: show()
     end,
 
     -- Modules Log
@@ -245,6 +249,10 @@ SynthVtoLab = {
         else
             self.log: disable()
         end
+    end,
+
+    writeLog = function (self, text)
+        self.log: w(text)
     end
 }
 
@@ -252,7 +260,6 @@ SynthVtoLab = {
 -- # Modules SynthV
 
 SynthV = {
-
     getTracks = function (self, project)
         local track_num = project: getNumTracks()
         local tracks = {}
@@ -266,15 +273,13 @@ SynthV = {
 
     getCurrentTrackDisplayOrder = function (self, main_editor)
         return main_editor: getCurrentTrack(): getDisplayOrder()
-    end,
-
+    end
 }
 
 
 -- # Modules path
 
 Path = {
-
     changeExt = function (self, path, ext)
         local path = string.gsub(path, '%.svp$', '.' .. ext)
         return path
@@ -387,7 +392,8 @@ OutputSettingsDialog = {
         -- Properties
         local obj = {
             tracks = tracks,
-            current_order = current_order
+            current_order = current_order,
+            choices = {}
         }
 
         return setmetatable(obj, { __index = self })
@@ -397,17 +403,15 @@ OutputSettingsDialog = {
 
     show = function (self)
         local dialog_parameters = self: getParameters()
-        return SV:showCustomDialog(dialog_parameters)
+        return SV: showCustomDialog(dialog_parameters)
     end,
 
     getParameters = function (self)
-        local choices = {}
-
         for index, track in ipairs(self.tracks) do
-            table.insert(choices, index, "track" .. tostring(index) .. ' : ' .. track: getName())
+            table.insert(self.choices, index, "track" .. tostring(index) .. ' : ' .. track: getName())
         end
 
-        table.insert(choices, 1, SV: T("all: all track"))
+        table.insert(self.choices, 1, SV: T("all: all track"))
 
         local param = {
             title = SV: T("Output settings track"),
@@ -420,7 +424,7 @@ OutputSettingsDialog = {
                     type = "ComboBox",
                     label = SV: T("Select track"),
                     default = self.current_order,
-                    choices = choices
+                    choices = self.choices
                 },
 
                 {
