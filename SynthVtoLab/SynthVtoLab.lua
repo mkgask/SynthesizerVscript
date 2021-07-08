@@ -157,6 +157,9 @@ function main()
         log: disable()
     end
 
+    local select_track = output_dialog_result.answers.track
+    log: w("select track number : " .. tostring(select_track))
+
 --[[
     local result_start_dialog = showStartDialog(synthv_to_lab.tracks, synthv_to_lab.current_track)
 
@@ -378,6 +381,8 @@ OutputSettingsDialog = {
             table.insert(choices, index, "track" .. tostring(index) .. ' : ' .. track: getName())
         end
 
+        table.insert(choices, 1, "all: 全トラック")
+
         local param = {
             title = SV: T("Output settings track"),
             message = SV: T("It will be saved in the same directory as the project file."),
@@ -388,7 +393,7 @@ OutputSettingsDialog = {
                     name = "track",
                     type = "ComboBox",
                     label = SV: T("Select track"),
-                    default = self.current_order - 1,
+                    default = self.current_order,
                     choices = choices
                 },
 
