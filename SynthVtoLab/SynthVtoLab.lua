@@ -132,35 +132,22 @@ function main()
 
     local synthv_to_lab = SynthVtoLab: new()
 
-    if not synthv_to_lab: precheck() then
+    if not synthv_to_lab: preCheck() then
         return SV: finish()
     end
 
-    local log = Log: new(synthv_to_lab.log_path)
-    log: w("synthv_to_lab.project_path : " .. synthv_to_lab.project_path)
+    synthv_to_lab: initLog()
 
-    for index, track in ipairs(synthv_to_lab.tracks) do
-        log: w("track" .. index .. " : " .. track: getName())
-    end
-
-    log: w("current track number : " .. tostring(synthv_to_lab.current_track))
-
-    local output_dialog = OutputSettingsDialog: new(synthv_to_lab.tracks, synthv_to_lab.current_track)
-    local output_dialog_result = output_dialog: show()
+    local output_dialog_result = synthv_to_lab: showOutputSettingsDialog()
 
     if not output_dialog_result.status then
         return SV: finish()
     end
 
-    if (output_dialog_result.answers.logsave) then
-        log: w("log start")
-        log: start()
-    else
-        log: disable()
-    end
+    synthv_to_lab: startLog(output_dialog_result)
 
     local select_track = output_dialog_result.answers.track
-    log: w("select track number : " .. tostring(select_track))
+    -- log: w("select track number : " .. tostring(select_track))
 
 --[[
     local result_start_dialog = showStartDialog(synthv_to_lab.tracks, synthv_to_lab.current_track)
@@ -180,8 +167,8 @@ function main()
     end
 ]]
 
-    log: close()
-    SV: finish()
+    -- log: close()
+    return SV: finish()
 end
 
 
@@ -195,13 +182,13 @@ SynthVtoLab = {
     new = function (self)
         local project = SV: getProject()
         local main_editor = SV: getMainEditor()
-        local tracks = self.getTracks(project)
-        local current_track = self.getCurrentTrackDisplayOrder(main_editor)
+        local tracks = SynthV: getTracks(project)
+        local current_track = SynthV: getCurrentTrackDisplayOrder(main_editor)
 
         local project_path = project: getFileName()
-        local project_path_windows = self.changePathToWindows(project_path)
-        local lab_path = project_path and self.changePathExt(project_path_windows, 'lab') or ''
-        local log_path = project_path and self.changePathExt(project_path_windows, 'synthv2lab.log') or ''
+        local project_path_windows = Path: changeToWindows(project_path)
+        local lab_path = project_path and Path: changeExt(project_path_windows, 'lab') or ''
+        local log_path = project_path and Path: changeExt(project_path_windows, 'synthv2lab.log') or ''
 
         -- Properties
         local obj = {
@@ -211,13 +198,14 @@ SynthVtoLab = {
             current_track = current_track,
             project_path = project_path_windows,
             lab_path = lab_path,
-            log_path = log_path
+            log_path = log_path,
+            log = nil
         }
 
         return setmetatable(obj, { __index = self })
     end,
 
-    precheck = function (self)
+    preCheck = function (self)
         if not (0 < #self.project_path) then
             SV: showMessageBox("!", "プロジェクトを開いてください。")
             return false
@@ -231,9 +219,41 @@ SynthVtoLab = {
         return true
     end,
 
-    -- Modules track
+    showOutputSettingsDialog = function (self)
+        local output_dialog = OutputSettingsDialog: new(self.tracks, self.current_track)
+        return output_dialog: show()
+    end,
 
-    getTracks =  function (project)
+    -- Modules Log
+
+    initLog = function (self)
+
+        self.log = Log: new(self.log_path)
+        self.log: w("synthv_to_lab.project_path : " .. self.project_path)
+
+        for index, track in ipairs(self.tracks) do
+            self.log: w("track" .. index .. " : " .. track: getName())
+        end
+
+        self.log: w("current track number : " .. tostring(self.current_track))
+    end,
+
+    startLog = function (self, output_dialog_result)
+        if (output_dialog_result.answers.logsave) then
+            self.log: w("log start")
+            self.log: start()
+        else
+            self.log: disable()
+        end
+    end
+}
+
+
+-- # Modules SynthV
+
+SynthV = {
+
+    getTracks = function (self, project)
         local track_num = project: getNumTracks()
         local tracks = {}
 
@@ -244,23 +264,27 @@ SynthVtoLab = {
         return tracks
     end,
 
-    getCurrentTrackDisplayOrder = function (main_editor)
+    getCurrentTrackDisplayOrder = function (self, main_editor)
         return main_editor: getCurrentTrack(): getDisplayOrder()
     end,
 
-    -- Modules path
+}
 
-    changePathExt = function (path, ext)
+
+-- # Modules path
+
+Path = {
+
+    changeExt = function (self, path, ext)
         local path = string.gsub(path, '%.svp$', '.' .. ext)
         return path
     end,
 
-    changePathToWindows = function (path)
+    changeToWindows = function (self, path)
         local path = string.gsub(path, '\\', '/')
         return path
     end
 }
-
 
 
 -- # Modules log
