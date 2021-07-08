@@ -265,7 +265,6 @@ Log = {
     -- Foundation
 
     new = function (self, log_path)
-        local UTF8toSJIS_table = io.open(UTF8toSJIS_table_path, "rb")
         local log_path_sjis = log_path
 
         if UTF8toSJIS_table then
@@ -422,6 +421,7 @@ end
 --- https://github.com/AoiSaya/FlashAir_UTF8toSJIS/
 
 UTF8toSJIS_table_path = "libs/Utf8Sjis.tbl"
+UTF8toSJIS_table = io.open(UTF8toSJIS_table_path, "rb")
 
 --[[
     UTF8toSJIS.lua - for FlashAir
