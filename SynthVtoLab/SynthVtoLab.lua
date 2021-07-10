@@ -147,8 +147,11 @@ function main()
     synthv_to_lab: startLog(output_dialog_result)
 
     local select_track = output_dialog_result.answers.track
+    local select_track_name = synthv_to_lab.output_dialog.choices[select_track]
+    local track_name = string.gsub(select_track_name, '^%w+%s:%s', '')
     synthv_to_lab: writeLog("select track number : " .. tostring(select_track))
-    synthv_to_lab: writeLog("synthv_to_lab.output_dialog.choices[select_track] : " .. tostring(synthv_to_lab.output_dialog.choices[select_track]))
+    synthv_to_lab: writeLog("select track name : " .. tostring(select_track_name))
+    synthv_to_lab: writeLog("track name : " .. tostring(track_name))
 
     -- 全トラックなら
         -- tracksをループ
@@ -156,6 +159,8 @@ function main()
             -- 出力ファイルパスを指定してトラック処理
     -- そうでなければ
         -- 出力ファイルパスを生成
+        local output_path = Path: changeExt(synthv_to_lab.project_path, '-' .. track_name .. '.lab')
+        synthv_to_lab: writeLog("output _path : " .. tostring(output_path))
         -- 出力ファイルパスを指定してトラック処理
 
     synthv_to_lab: closeLog()
