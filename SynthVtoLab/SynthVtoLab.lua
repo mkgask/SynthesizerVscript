@@ -148,30 +148,17 @@ function main()
 
     local select_track = output_dialog_result.answers.track
     synthv_to_lab: writeLog("select track number : " .. tostring(select_track))
-    synthv_to_lab: writeLog("synthv_to_lab.output_dialog.choices : " .. tostring(synthv_to_lab.output_dialog.choices))
     synthv_to_lab: writeLog("synthv_to_lab.output_dialog.choices[select_track] : " .. tostring(synthv_to_lab.output_dialog.choices[select_track]))
 
+    -- 全トラックなら
+        -- tracksをループ
+            -- トラック別の出力ファイルパスを生成
+            -- 出力ファイルパスを指定してトラック処理
+    -- そうでなければ
+        -- 出力ファイルパスを生成
+        -- 出力ファイルパスを指定してトラック処理
 
-
---[[
-    local result_start_dialog = showStartDialog(synthv_to_lab.tracks, synthv_to_lab.current_track)
-
-    if result_start_dialog.status == false then
-        do return end
-    end
-
-    local consonant_list = getTrackConsonant()
-    local lablist = convertTrackConsonantToLabList(consonant_list)
-    output(lablist)
-
-    local result_end_dialog showEndDialog(output_file)
-
-    if result_end_dialog.status == false then
-        do return end
-    end
-]]
-
-    -- log: close()
+    synthv_to_lab: closeLog()
     return SV: finish()
 end
 
@@ -254,6 +241,10 @@ SynthVtoLab = {
 
     writeLog = function (self, text)
         self.log: w(text)
+    end,
+
+    closeLog = function (self)
+        self.log: close()
     end
 }
 
