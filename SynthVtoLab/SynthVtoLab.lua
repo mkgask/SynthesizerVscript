@@ -178,8 +178,8 @@ SynthVtoLab = {
 
         local project_path = project: getFileName()
         local project_path_windows = Path: changeToWindows(project_path)
-        local lab_path = project_path and Path: changeExt(project_path_windows, 'lab') or ''
-        local log_path = project_path and Path: changeExt(project_path_windows, 'synthv2lab.log') or ''
+        local lab_path = project_path and Path: changeExt(project_path_windows, '.lab') or ''
+        local log_path = project_path and Path: changeExt(project_path_windows, '.synthv2lab.log') or ''
 
         -- Properties
         local obj = {
@@ -273,7 +273,7 @@ SynthV = {
 
 Path = {
     changeExt = function (self, path, ext)
-        local path = string.gsub(path, '%.svp$', '.' .. ext)
+        local path = string.gsub(path, '%.[^%.]*$', ext)
         return path
     end,
 
