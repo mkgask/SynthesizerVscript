@@ -147,10 +147,11 @@ function main()
     synthv_to_lab: startLog(output_dialog_result)
 
     local select_track = output_dialog_result.answers.track
-    -- log: w("select track number : " .. tostring(select_track))
     synthv_to_lab: writeLog("select track number : " .. tostring(select_track))
-    synthv_to_lab: writeLog("synthv_to_lab.choices : " .. tostring(synthv_to_lab.output_dialog.choices))
-    synthv_to_lab: writeLog("synthv_to_lab.choices[select_track] : " .. tostring(synthv_to_lab.output_dialog.choices[select_track]))
+    synthv_to_lab: writeLog("synthv_to_lab.output_dialog.choices : " .. tostring(synthv_to_lab.output_dialog.choices))
+    synthv_to_lab: writeLog("synthv_to_lab.output_dialog.choices[select_track] : " .. tostring(synthv_to_lab.output_dialog.choices[select_track]))
+
+
 
 --[[
     local result_start_dialog = showStartDialog(synthv_to_lab.tracks, synthv_to_lab.current_track)
@@ -403,7 +404,15 @@ OutputSettingsDialog = {
 
     show = function (self)
         local dialog_parameters = self: getParameters()
-        return SV: showCustomDialog(dialog_parameters)
+        results = SV: showCustomDialog(dialog_parameters)
+            
+        if not results.status then
+            return results
+        end
+
+        results.answers.track = results.answers.track + 1
+
+        return results
     end,
 
     getParameters = function (self)
