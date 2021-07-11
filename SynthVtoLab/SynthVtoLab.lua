@@ -3,7 +3,7 @@
 
 -- # Properties
 
-local vowel_table_jp = {
+VowelTable = {
     ["あ"] = "a", ["い"] = "i", ["う"] = "u", ["え"] = "e", ["お"] = "o",
     ["か"] = "a", ["き"] = "i", ["く"] = "u", ["け"] = "e", ["こ"] = "o",
     ["さ"] = "a", ["し"] = "i", ["す"] = "u", ["せ"] = "e", ["そ"] = "o",
@@ -59,25 +59,6 @@ local vowel_table_jp = {
     ["うぁ"] = 'a',               ["ウァ"] = "u",
     ["てぃ"] = "i",               ["ティ"] = "i",
 }
-
-local vowel_table_ch = {
-    -- please pull request
-}
-
-local vowel_table_en = {
-    -- please pull request
-}
-
-
---- get vowel from definition list
---- @param key string
---- @return string
-function vowelTable(key)
-    local vowel = vowel_table_jp[key]
-    if not vowel then vowel = vowel_table_ch[key] end
-    if not vowel then vowel = vowel_table_en[key] end
-    return vowel
-end
 
 
 -- # Foundation
@@ -154,14 +135,45 @@ function main()
     synthv_to_lab: writeLog("track name : " .. tostring(track_name))
 
     -- 全トラックなら
+    if select_track == 1 then
+        local track_num = synthv_to_lab.project: getNumTracks()
+        synthv_to_lab: writeLog("track num : " .. tostring(track_num))
+
         -- tracksをループ
+        for index = 1, track_num do
+            synthv_to_lab: writeLog("track index : " .. tostring(index))
+
+            local track = synthv_to_lab.project: getTrack(index)
+            synthv_to_lab: writeLog("track : " .. tostring(track))
+
+            local track_name = string.gsub(track: getName(), '^%w+%s:%s', '')
+            synthv_to_lab: writeLog("processing track name : " .. tostring(track_name))
+
             -- トラック別の出力ファイルパスを生成
-            -- 出力ファイルパスを指定してトラック処理
+            local save_path = Path: changeExt(synthv_to_lab.project_path, '-' .. track_name .. '.lab')
+            synthv_to_lab: writeLog("save lab path : " .. tostring(save_path))
+            -- トラック処理
+            local lab_content = synthv_to_lab: craeteLabContent(index)
+            synthv_to_lab: writeLog("lab content length : " .. tostring(#lab_content))
+            -- 出力ファイルパスを指定して内容を保存
+            local result, error = synthv_to_lab: saveLab(save_path, lab_content)
+            synthv_to_lab: writeLog("save result : " .. tostring(result))
+            synthv_to_lab: writeLog("save error : " .. tostring(error))
+        end
+
     -- そうでなければ
+    else
         -- 出力ファイルパスを生成
-        local output_path = Path: changeExt(synthv_to_lab.project_path, '-' .. track_name .. '.lab')
-        synthv_to_lab: writeLog("output _path : " .. tostring(output_path))
-        -- 出力ファイルパスを指定してトラック処理
+        local save_path = Path: changeExt(synthv_to_lab.project_path, '-' .. track_name .. '.lab')
+        synthv_to_lab: writeLog("save lab path : " .. tostring(save_path))
+        -- トラック処理
+        local lab_content = synthv_to_lab: craeteLabContent(select_track - 1)
+        synthv_to_lab: writeLog("lab content length : " .. tostring(#lab_content))
+        -- 出力ファイルパスを指定して内容を保存
+        local result, error = synthv_to_lab: saveLab(save_path, lab_content)
+        synthv_to_lab: writeLog("save result : " .. tostring(result))
+        synthv_to_lab: writeLog("save error : " .. tostring(error))
+    end
 
     synthv_to_lab: closeLog()
     return SV: finish()
@@ -221,10 +233,58 @@ SynthVtoLab = {
         return self.output_dialog: show()
     end,
 
+    -- Modules Lab
+
+    craeteLabContent = function (self, track_number)
+        local lab_content = {}
+
+        local time_axis = self.project: getTimeAxis()
+
+        local target_track = self.tracks[track_number]
+        local group_num = target_track: getNumGroups()
+
+        for index = 1, group_num do
+            local group_reference = target_track: getGroupReference(index)
+            local note_group = group_reference: getTarget()
+            local notes_num = note_group: getNumNotes()
+
+            for ind = 1, notes_num do
+                local note = note_group: getNote(ind)
+
+                local lyrics_start_brick = note: getOnset()
+                local lyrics_end_brick = lyrics_start_brick + note: getDuration()
+
+                local lyrics_start_second = time_axis: getSecondsFromBlick(lyrics_start_brick)
+                local lyrics_end_second = time_axis: getSecondsFromBlick(lyrics_end_brick)
+
+                local lyrics_start = SynthV: secondTo100ns(lyrics_start_second)
+                local lyrics_end = SynthV: secondTo100ns(lyrics_end_second)
+
+                local lyrics = note: getLyrics()
+                local phonemes = VowelTable[lyrics]
+
+                table.insert(lab_content, tostring(lyrics_start) .. ' ' .. tostring(lyrics_end) .. ' ' .. phonemes)
+            end
+        end
+
+        return table.concat(lab_content, "\n")
+    end,
+
+    saveLab = function (self, path, content)
+        local path_sjis = path
+
+        if UTF8toSJIS_table then
+            path_sjis = UTF8toSJIS:UTF8_to_SJIS_str_cnv(UTF8toSJIS_table, path)
+        end
+
+        local f = io.open(path_sjis, "w")
+        f: write(content)
+        return f: close()
+    end,
+
     -- Modules Log
 
     initLog = function (self)
-
         self.log = Log: new(self.log_path)
         self.log: w("synthv_to_lab.project_path : " .. self.project_path)
 
@@ -238,6 +298,7 @@ SynthVtoLab = {
     startLog = function (self, output_dialog_result)
         if (output_dialog_result.answers.logsave) then
             self.log: w("log start")
+            self.log: w("log path : " .. self.log_path)
             self.log: start()
         else
             self.log: disable()
@@ -270,6 +331,10 @@ SynthV = {
 
     getCurrentTrackDisplayOrder = function (self, main_editor)
         return main_editor: getCurrentTrack(): getDisplayOrder()
+    end,
+
+    secondTo100ns = function (self, second)
+        return math.floor(second * 10000000)
     end
 }
 
