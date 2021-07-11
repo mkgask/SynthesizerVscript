@@ -29,12 +29,12 @@ Under planning.
 
 1. このページの緑のCodeボタンからzipファイルをダウンロード＆展開してください。
 1. libsフォルダをSynthesizer Vの実行ファイルがあるフォルダにコピーしてください。
-1. SynthVtoLabフォルダをSynthesiver Vのscriptフォルダへコピーしてください。
+1. SynthVtoLabフォルダをSynthesiver Vのscriptsフォルダへコピーしてください。
 1. Synthesizer Vを起動すると、上部メニューのスクリプトに「SynthV to Lab」が増えているので、用途に合わせてご利用ください。
 ---
 1. Zipfile download and expand where green "Code" button in this page.
 1. Copy to libs folder to same directory in Synthesizer V execution file.
-1. Copy to SynthVtoLab folder to Synthesizer V script folder.
+1. Copy to SynthVtoLab folder to Synthesizer V scripts folder.
 1. Use it according to your needs "Synth V to Lab" are added to the script in the top menu when you start Synthesizer V.
 <!--
 1. リリースページからzipファイルをダウンロード・展開してください。
