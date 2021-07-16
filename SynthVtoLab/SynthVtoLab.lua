@@ -245,32 +245,110 @@ SynthVtoLab = {
 
         local target_track = self.tracks[track_number]
         local group_num = target_track: getNumGroups()
+        self.log: w("target_track: getNumGroups() : " .. tostring(group_num))
 
         for index = 1, group_num do
             local group_reference = target_track: getGroupReference(index)
+            local phonems_group = SV: getPhonemesForGroup(group_reference)
+            self.log: w("phonems_group : " .. tostring(phonems_group))
+
+            for kpg, vpg in pairs(phonems_group) do
+                self.log: w("phonems_group : " .. tostring(kpg) .. ' : ' .. tostring(vpg))
+            end
+
             local note_group = group_reference: getTarget()
             local notes_num = note_group: getNumNotes()
+            self.log: w("note_group: getNumNotes : " .. tostring(notes_num))
 
             for ind = 1, notes_num do
+                self.log: w("for ind, notes_num do : " .. tostring(ind))
+
                 local note = note_group: getNote(ind)
 
                 local lyrics_start_brick = note: getOnset()
                 local lyrics_end_brick = lyrics_start_brick + note: getDuration()
+                self.log: w("lyrics_start_brick : " .. tostring(lyrics_start_brick))
+                self.log: w("note: getDuration() : " .. tostring(note: getDuration()))
+                self.log: w("lyrics_end_brick : " .. tostring(lyrics_end_brick))
+
+                local get_end = note: getEnd()
+                self.log: w("get_end : " .. tostring(get_end))
 
                 local lyrics_start_second = time_axis: getSecondsFromBlick(lyrics_start_brick)
                 local lyrics_end_second = time_axis: getSecondsFromBlick(lyrics_end_brick)
+                self.log: w("lyrics_start_second : " .. tostring(lyrics_start_second))
+                self.log: w("lyrics_end_second : " .. tostring(lyrics_end_second))
 
                 local lyrics_start = SynthV: secondTo100ns(lyrics_start_second)
                 local lyrics_end = SynthV: secondTo100ns(lyrics_end_second)
+                self.log: w("lyrics_start : " .. tostring(lyrics_start))
+                self.log: w("lyrics_end : " .. tostring(lyrics_end))
 
                 local lyrics = note: getLyrics()
-                local phonemes = VowelTable[lyrics]
+                local p = VowelTable[lyrics]
+                self.log: w("lyrics : " .. tostring(lyrics))
+                self.log: w("p : " .. tostring(p))
+
+                local attr = note: getAttributes()
+                self.log: w("attr : " .. tostring(attr))
+                self.log: w("#attr.alt : " .. tostring(#attr.alt))
+                self.log: w("#attr.dur : " .. tostring(#attr.dur))
+
+                for k, v in pairs(attr) do
+                    self.log: w("attr : " .. tostring(k) .. ' : ' .. tostring(v))
+                end
+
+                for ka, va in pairs(attr.alt) do
+                    self.log: w("attr.alt : " .. tostring(ka) .. ' : ' .. tostring(va))
+                end
+
+                for kd, vd in pairs(attr.dur) do
+                    self.log: w("attr.dur : " .. tostring(kd) .. ' : ' .. tostring(vd))
+                end
+
+                local phonemes_all = note: getPhonemes()
+
+                self.log: w("note: getPhonemes() : " .. phonemes_all)
+
+                if 0 == #phonemes_all then
+                    phonemes_all = phonems_group[ind]
+                end
+
+                self.log: w("phonems_group[ind] : " .. phonemes_all)
+
+                if 0 == #phonemes_all then
+                    goto continue
+                end
+
+                local phonemes = self: str_split(phonemes_all)
+                self.log: w("phonemes : " .. tostring(phonemes))
+
+                local dur = note: getAttributes().dur
+                self.log: w("dur : " .. tostring(dur))
+
+
+
+
 
                 table.insert(lab_content, tostring(lyrics_start) .. ' ' .. tostring(lyrics_end) .. ' ' .. phonemes)
+
+                ::continue::
             end
         end
 
         return table.concat(lab_content, "\n")
+    end,
+
+    str_split = function (self, str)
+        local r = {}
+        self.log: w("str : " .. str)
+        self.log: w("str : " .. string.match(str, '%w+'))
+
+        for value in string.match(str, '%w+') do
+            table.insert(r, value)
+        end
+
+        return r
     end,
 
     saveLab = function (self, path, content)
