@@ -120,7 +120,8 @@ function main()
         return SV: finish()
     end
 
-    synthv_to_lab: initLog()
+    Log: setPath(synthv_to_lab.log_path)
+    synthv_to_lab: saveFirstLog()
 
     local output_dialog_result = synthv_to_lab: showOutputSettingsDialog()
 
@@ -128,54 +129,60 @@ function main()
         return SV: finish()
     end
 
-    synthv_to_lab: startLog(output_dialog_result)
+    if output_dialog_result.answers.logsave then
+        Log: start()
+        synthv_to_lab: startLog()
+    else
+        Log: disable()
+    end
+
 
     local select_track = output_dialog_result.answers.track
     local select_track_name = synthv_to_lab.output_dialog.choices[select_track]
     local track_name = string.gsub(select_track_name, '^%w+%s:%s', '')
-    synthv_to_lab: writeLog("select track number : " .. tostring(select_track))
-    synthv_to_lab: writeLog("select track name : " .. tostring(select_track_name))
-    synthv_to_lab: writeLog("track name : " .. tostring(track_name))
+    Log: w("main() : select track number : " .. Log: v(select_track))
+    Log: w("main() : select track name : " .. Log: v(select_track_name))
+    Log: w("main() : track name : " .. Log: v(track_name))
 
     -- 全トラックなら
     if select_track == 1 then
         local track_num = synthv_to_lab.project: getNumTracks()
-        synthv_to_lab: writeLog("track num : " .. tostring(track_num))
+        Log: w("main() : track num : " .. Log: v(track_num))
 
         -- tracksをループ
         for index = 1, track_num do
-            synthv_to_lab: writeLog("track index : " .. tostring(index))
+            Log: w("main() : track index : " .. Log: v(index))
 
             local track = synthv_to_lab.project: getTrack(index)
-            synthv_to_lab: writeLog("track : " .. tostring(track))
+            Log: w("main() : track : " .. tostring(track))
 
             local track_name = string.gsub(track: getName(), '^%w+%s:%s', '')
-            synthv_to_lab: writeLog("processing track name : " .. tostring(track_name))
+            Log: w("main() : processing track name : " .. Log: v(track_name))
 
             -- トラック別の出力ファイルパスを生成
             local save_path = Path: changeExt(synthv_to_lab.project_path, '-' .. track_name .. '.lab')
-            synthv_to_lab: writeLog("save lab path : " .. tostring(save_path))
+            Log: w("main() : save lab path : " .. save_path)
             -- トラック処理
             local lab_content = synthv_to_lab: craeteLabContent(index)
-            synthv_to_lab: writeLog("lab content length : " .. tostring(#lab_content))
+            Log: w("main() : lab content length : " .. Log: v(#lab_content))
             -- 出力ファイルパスを指定して内容を保存
             local result, error = synthv_to_lab: saveLab(save_path, lab_content)
-            synthv_to_lab: writeLog("save result : " .. tostring(result))
-            synthv_to_lab: writeLog("save error : " .. tostring(error))
+            Log: w("main() : save result : " .. Log: v(result))
+            Log: w("main() : save error : " .. Log: v(error))
         end
 
     -- そうでなければ
     else
         -- 出力ファイルパスを生成
         local save_path = Path: changeExt(synthv_to_lab.project_path, '-' .. track_name .. '.lab')
-        synthv_to_lab: writeLog("save lab path : " .. tostring(save_path))
+        Log: w("main() : save lab path : " .. save_path)
         -- トラック処理
         local lab_content = synthv_to_lab: craeteLabContent(select_track - 1)
-        synthv_to_lab: writeLog("lab content length : " .. tostring(#lab_content))
+        Log: w("main() : lab content length : " .. Log: v(#lab_content))
         -- 出力ファイルパスを指定して内容を保存
         local result, error = synthv_to_lab: saveLab(save_path, lab_content)
-        synthv_to_lab: writeLog("save result : " .. tostring(result))
-        synthv_to_lab: writeLog("save error : " .. tostring(error))
+        Log: w("main() : save result : " .. Log: v(result))
+        Log: w("main() : save error : " .. Log: v(error))
     end
 
     synthv_to_lab: closeLog()
@@ -245,86 +252,86 @@ SynthVtoLab = {
 
         local target_track = self.tracks[track_number]
         local group_num = target_track: getNumGroups()
-        self.log: w("target_track: getNumGroups() : " .. tostring(group_num))
+        Log: w("target_track: getNumGroups() : " .. tostring(group_num))
 
         for index = 1, group_num do
             local group_reference = target_track: getGroupReference(index)
             local phonems_group = SV: getPhonemesForGroup(group_reference)
-            self.log: w("phonems_group : " .. tostring(phonems_group))
+            Log: w("phonems_group : " .. tostring(phonems_group))
 
             for kpg, vpg in pairs(phonems_group) do
-                self.log: w("phonems_group : " .. tostring(kpg) .. ' : ' .. tostring(vpg))
+                Log: w("phonems_group : " .. tostring(kpg) .. ' : ' .. tostring(vpg))
             end
 
             local note_group = group_reference: getTarget()
             local notes_num = note_group: getNumNotes()
-            self.log: w("note_group: getNumNotes : " .. tostring(notes_num))
+            Log: w("note_group: getNumNotes : " .. tostring(notes_num))
 
             for ind = 1, notes_num do
-                self.log: w("for ind, notes_num do : " .. tostring(ind))
+                Log: w("for ind, notes_num do : " .. tostring(ind))
 
                 local note = note_group: getNote(ind)
 
                 local lyrics_start_brick = note: getOnset()
                 local lyrics_end_brick = lyrics_start_brick + note: getDuration()
-                self.log: w("lyrics_start_brick : " .. tostring(lyrics_start_brick))
-                self.log: w("note: getDuration() : " .. tostring(note: getDuration()))
-                self.log: w("lyrics_end_brick : " .. tostring(lyrics_end_brick))
+                Log: w("lyrics_start_brick : " .. tostring(lyrics_start_brick))
+                Log: w("note: getDuration() : " .. tostring(note: getDuration()))
+                Log: w("lyrics_end_brick : " .. tostring(lyrics_end_brick))
 
                 local get_end = note: getEnd()
-                self.log: w("get_end : " .. tostring(get_end))
+                Log: w("get_end : " .. tostring(get_end))
 
                 local lyrics_start_second = time_axis: getSecondsFromBlick(lyrics_start_brick)
                 local lyrics_end_second = time_axis: getSecondsFromBlick(lyrics_end_brick)
-                self.log: w("lyrics_start_second : " .. tostring(lyrics_start_second))
-                self.log: w("lyrics_end_second : " .. tostring(lyrics_end_second))
+                Log: w("lyrics_start_second : " .. tostring(lyrics_start_second))
+                Log: w("lyrics_end_second : " .. tostring(lyrics_end_second))
 
                 local lyrics_start = SynthV: secondTo100ns(lyrics_start_second)
                 local lyrics_end = SynthV: secondTo100ns(lyrics_end_second)
-                self.log: w("lyrics_start : " .. tostring(lyrics_start))
-                self.log: w("lyrics_end : " .. tostring(lyrics_end))
+                Log: w("lyrics_start : " .. tostring(lyrics_start))
+                Log: w("lyrics_end : " .. tostring(lyrics_end))
 
                 local lyrics = note: getLyrics()
                 local p = VowelTable[lyrics]
-                self.log: w("lyrics : " .. tostring(lyrics))
-                self.log: w("p : " .. tostring(p))
+                Log: w("lyrics : " .. tostring(lyrics))
+                Log: w("p : " .. tostring(p))
 
                 local attr = note: getAttributes()
-                self.log: w("attr : " .. tostring(attr))
-                self.log: w("#attr.alt : " .. tostring(#attr.alt))
-                self.log: w("#attr.dur : " .. tostring(#attr.dur))
+                Log: w("attr : " .. tostring(attr))
+                Log: w("#attr.alt : " .. tostring(#attr.alt))
+                Log: w("#attr.dur : " .. tostring(#attr.dur))
 
                 for k, v in pairs(attr) do
-                    self.log: w("attr : " .. tostring(k) .. ' : ' .. tostring(v))
+                    Log: w("attr : " .. tostring(k) .. ' : ' .. tostring(v))
                 end
 
                 for ka, va in pairs(attr.alt) do
-                    self.log: w("attr.alt : " .. tostring(ka) .. ' : ' .. tostring(va))
+                    Log: w("attr.alt : " .. tostring(ka) .. ' : ' .. tostring(va))
                 end
 
                 for kd, vd in pairs(attr.dur) do
-                    self.log: w("attr.dur : " .. tostring(kd) .. ' : ' .. tostring(vd))
+                    Log: w("attr.dur : " .. tostring(kd) .. ' : ' .. tostring(vd))
                 end
 
                 local phonemes_all = note: getPhonemes()
 
-                self.log: w("note: getPhonemes() : " .. phonemes_all)
+                Log: w("note: getPhonemes() : " .. phonemes_all)
 
                 if 0 == #phonemes_all then
                     phonemes_all = phonems_group[ind]
                 end
 
-                self.log: w("phonems_group[ind] : " .. phonemes_all)
+                Log: w("phonems_group[ind] : " .. phonemes_all)
 
                 if 0 == #phonemes_all then
                     goto continue
                 end
 
                 local phonemes = self: str_split(phonemes_all)
-                self.log: w("phonemes : " .. tostring(phonemes))
+                Log: w("phonemes : " .. tostring(phonemes))
 
                 local dur = note: getAttributes().dur
-                self.log: w("dur : " .. tostring(dur))
+                Log: w("dur : " .. tostring(dur))
 
 
 
@@ -341,8 +348,8 @@ SynthVtoLab = {
 
     str_split = function (self, str)
         local r = {}
-        self.log: w("str : " .. str)
-        self.log: w("str : " .. string.match(str, '%w+'))
+        Log: w("str : " .. str)
+        Log: w("str : " .. string.match(str, '%w+'))
 
         for value in string.match(str, '%w+') do
             table.insert(r, value)
@@ -365,33 +372,28 @@ SynthVtoLab = {
 
     -- Modules Log
 
-    initLog = function (self)
-        self.log = Log: new(self.log_path)
-        self.log: w("synthv_to_lab.project_path : " .. self.project_path)
+    saveFirstLog = function (self)
+        Log: w("synthv_to_lab.saveFirstLog() : self.project_path : " .. self.project_path)
+        Log: w("synthv_to_lab.saveFirstLog() : self.lab_path : " .. self.lab_path)
+        Log: w("synthv_to_lab.saveFirstLog() : self.log_path : " .. self.log_path)
 
         for index, track in ipairs(self.tracks) do
-            self.log: w("track" .. index .. " : " .. track: getName())
+            Log: w("synthv_to_lab.saveFirstLog() : track" .. index .. " : " .. Log: v(track: getName()))
         end
 
-        self.log: w("current track number : " .. tostring(self.current_track))
+        Log: w("synthv_to_lab.saveFirstLog() : current track number : " .. Log: v(self.current_track))
     end,
 
     startLog = function (self, output_dialog_result)
-        if (output_dialog_result.answers.logsave) then
-            self.log: w("log start")
-            self.log: w("log path : " .. self.log_path)
-            self.log: start()
-        else
-            self.log: disable()
-        end
+        Log: w("synthv_to_lab.startLog() : log start")
     end,
 
     writeLog = function (self, text)
-        self.log: w(text)
+        Log: w(text)
     end,
 
     closeLog = function (self)
-        self.log: close()
+        Log: close()
     end
 }
 
@@ -437,20 +439,14 @@ Path = {
 
 -- # Modules log
 
-Log = {
+LogBase = {
 
     -- Foundation
 
-    new = function (self, log_path)
-        local log_path_sjis = log_path
-
-        if UTF8toSJIS_table then
-            log_path_sjis = UTF8toSJIS:UTF8_to_SJIS_str_cnv(UTF8toSJIS_table, log_path)
-        end
-
+    new = function (self)
         local obj = {
-            log_path = log_path,
-            log_path_sjis = log_path_sjis,
+            log_path = '',
+            log_path_sjis = '',
             log_start = false,
             pre_log = "",
             logfile = nil,
@@ -472,6 +468,17 @@ Log = {
         end
 
         return setmetatable(obj, { __index = self })
+    end,
+
+    setPath = function (self, log_path)
+        local log_path_sjis = log_path
+
+        if UTF8toSJIS_table then
+            log_path_sjis = UTF8toSJIS:UTF8_to_SJIS_str_cnv(UTF8toSJIS_table, log_path)
+        end
+
+        self.log_path = log_path
+        self.log_path_sjis = log_path_sjis
     end,
 
     start = function (self)
@@ -513,16 +520,65 @@ Log = {
         end
 
         if (self.log_start) then
-            return self.logfile: write('[' .. self.t() .. '] ' .. tostring(value) .. "\n")
+            return self.logfile: write('[' .. self: t() .. '] ' .. tostring(value) .. "\n")
         end
 
-        self.pre_log = self.pre_log .. '[' .. self.t() .. '] ' .. tostring(value) .. "\n";
+        self.pre_log = self.pre_log .. '[' .. self: t() .. '] ' .. tostring(value) .. "\n";
     end,
 
     t = function (self)
         return os.date("%Y-%m-%d %H:%M:%S")
+    end,
+
+    v = function (self, value, hash_table, depth)
+        local value_type = type(value)
+        if depth == nil then depth = 0 end
+        if hash_table then hash_table = true else hash_table = false end
+
+        if value_type == 'nil' then
+            return 'nil'
+        end
+
+        if value_type == 'number' then
+            return tostring(value)
+        end
+
+        if value_type == 'string' then
+            return '"' .. tostring(value) .. '"'
+        end
+
+        if value_type == 'boolean' then
+            return value and 'true' or 'false'
+        end
+
+        if value_type == 'table' then
+            local r = "\n"
+            depth = depth + 1
+
+            local indent = ''
+
+            for index = 1, depth do
+                indent = indent .. '    '
+            end
+
+            if hash_table then
+                for key, val in pairs(value) do
+                    r = r .. 'table:' .. indent .. tostring(key) .. ' : ' .. self: v(val, hash_table, depth) .. "\n"
+                end
+            else
+                for ind, val in ipairs(value) do
+                    r = r .. 'table:' .. indent .. tostring(ind) .. ' : ' .. self: v(val, hash_table, depth) .. "\n"
+                end
+            end
+
+            return r
+        end
+
+        return value_type .. ' : ' .. tostring(value)
     end
 }
+
+Log = LogBase: new()
 
 
 -- # Modules output settings dialog
