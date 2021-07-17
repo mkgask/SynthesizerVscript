@@ -249,6 +249,28 @@ SynthVtoLab = {
         local lab_content = {}
 
         local time_axis = self.project: getTimeAxis()
+        local phonems_group = SynthV: getPhonemesForGroup()
+
+        local target_track = self.tracks[track_number]
+        local note_groups = SynthV: getNoteGroup(target_track)
+
+        for note_group in note_groups do
+            local notes_num = SynthV: getNumNotes(note_group)
+
+            for index = 1, notes_num do
+                local note = note_group: getNote(index)
+                local base_phoneme = phonems_group(index)
+
+                local note_info = SynthV: getNoteInfo(note, base_phoneme)
+            end
+        end
+
+    end,
+
+    craeteLabContent = function (self, track_number)
+        local lab_content = {}
+
+        local time_axis = self.project: getTimeAxis()
 
         local target_track = self.tracks[track_number]
         local group_num = target_track: getNumGroups()
@@ -418,6 +440,40 @@ SynthV = {
 
     secondTo100ns = function (self, second)
         return math.floor(second * 10000000)
+    end,
+
+    getPhonemesForGroup = function (self)
+        local phonems_group = SV: getPhonemesForGroup(group_reference)
+        Log: w("SynthV.getPhonemesForGroup() : phonems_group : " .. tostring(phonems_group))
+
+        for kpg, vpg in pairs(phonems_group) do
+            Log: w("SynthV.getPhonemesForGroup() : phonems_group : " .. tostring(kpg) .. ' : ' .. tostring(vpg))
+        end
+
+        return phonems_group
+    end,
+
+    getNoteGroup = function (self, track)
+        local group_num = track: getNumGroups()
+        Log: w("SynthV.getNoteGroup() : target_track: getNumGroups() : " .. tostring(group_num))
+
+        local note_groups = {}
+
+        for index = 1, group_num do
+            local group_reference = track: getGroupReference(index)
+            local note_group = group_reference: getTarget()
+            table.insert(note_groups, note_group)
+        end
+
+        return note_groups
+    end,
+
+    getNumNotes = function (self, note_group)
+        local notes_num = note_group: getNumNotes()
+        Log: w("SynthV.getNumNotes() : notes_num : " .. notes_num)
+    end,
+
+    getNoteInfo = function (self, note, base_phoneme)
     end
 }
 
