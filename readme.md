@@ -9,11 +9,11 @@ This repository plans the following Synthesizer V scripts.
 
 AviUtlのPSDToolkitで使う口パク準備（音素のみ）を生成するlabファイルを出力  
 曲中でのBPM変更も対応済みのはずです  
-多分ほぼ完成
+~~多分ほぼ完成~~
 
 Output lab file for lip-sync preparation (phonemes only) used in PSDToolkit in AviUtl.  
 BPM change in the song should have been supported.  
-Maybe almost Completed.
+~~Maybe almost Completed.~~
 
 
 ## SynthVtoVmd
