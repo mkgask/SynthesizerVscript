@@ -261,7 +261,7 @@ SynthVtoLab = {
                 local note = note_group: getNote(index)
                 local base_phoneme = phonems_group(index)
 
-                local note_info = SynthV: getNoteInfo(note, base_phoneme)
+                local note_info = SynthV: getNoteInfo(note, base_phoneme, time_axis)
             end
         end
 
@@ -473,8 +473,45 @@ SynthV = {
         Log: w("SynthV.getNumNotes() : notes_num : " .. notes_num)
     end,
 
-    getNoteInfo = function (self, note, base_phoneme)
+    getNoteInfo = function (self, note, base_phoneme, time_axis)
+        local attr = note: getAttributes()
+        local durs = attr.dur
+        local alts = attr.alt
+        local note_offset = attr.tNoteOffset
+
+        local dur_all  = note: getDuration()
+        local onSet = note: getOnset()
+        local phonemes = note: getPhonemes()
+
+        if not phonemes then phonemes = base_phoneme end
+
+        --[[
+            ノートオフセット取得（100ns）
+            音素の開始時間生成（100ns）
+            音素の終了時間生成（100ns）
+            音素の全体の継続時間取得（100ns）
+            音素を空白で分割
+            音素長スケーリングの数が音素の分割数と一致するなら
+                音素数分ループ
+                    aiueoなら母音とする、それ以外は子音とする
+
+
+                    
+                        音素長スケーリングの値で音素の全体の継続時間から音素時間を割り出し
+                        開始時間＋オフセット＋処理済みの音素長スケーリング時間＋音素時間
+            一致しないか音素長スケーリングが空の場合
+                音素数で100%を割り、音素の全体の継続時間から音素時間を割り出し
+                開始時間＋オフセット＋処理済みの音素時間＋音素時間
+        ]]
+
+        note_offset = self: convertNoteOffset100ns(note_offset)
+
+    end,
+
+    convertNoteOffset100ns = function (self, note_offset)
+        return self: secondTo100ns(note_offset)
     end
+
 }
 
 
