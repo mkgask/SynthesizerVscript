@@ -443,7 +443,7 @@ SynthV = {
     end,
 
     getPhonemesForGroup = function (self)
-        local phonems_group = SV: getPhonemesForGroup(group_reference)
+        local phonems_group = SV: getPhonemesForGroup()
         Log: w("SynthV.getPhonemesForGroup() : phonems_group : " .. tostring(phonems_group))
 
         for kpg, vpg in pairs(phonems_group) do
@@ -477,13 +477,14 @@ SynthV = {
         local attr = note: getAttributes()
         local durs = attr.dur
         local alts = attr.alt
-        local note_offset = attr.tNoteOffset
+        local note_offset_second = attr.tNoteOffset
 
-        local dur_all  = note: getDuration()
-        local onSet = note: getOnset()
-        local phonemes = note: getPhonemes()
+        local dur_all_brick = note: getDuration()
+        local note_onset_brick = note: getOnset()
+        local note_end_brick = note: getEnd()
+        local phonemes_string = note: getPhonemes()
 
-        if not phonemes then phonemes = base_phoneme end
+        if not phonemes_string then phonemes_string = base_phoneme end
 
         --[[
             ノートオフセット取得（100ns）
@@ -491,25 +492,55 @@ SynthV = {
             音素の終了時間生成（100ns）
             音素の全体の継続時間取得（100ns）
             音素を空白で分割
-            音素長スケーリングの数が音素の分割数と一致するなら
-                音素数分ループ
-                    aiueoなら母音とする、それ以外は子音とする
+            100を音素数で割ってデフォルト出力割合とする
 
-
-                    
-                        音素長スケーリングの値で音素の全体の継続時間から音素時間を割り出し
-                        開始時間＋オフセット＋処理済みの音素長スケーリング時間＋音素時間
-            一致しないか音素長スケーリングが空の場合
-                音素数で100%を割り、音素の全体の継続時間から音素時間を割り出し
-                開始時間＋オフセット＋処理済みの音素時間＋音素時間
+            音素数分ループ
+                aiueoなら母音とする、それ以外は子音とする
+                    子音の場合
+                        開始時間を取得
+                        継続時間を取得
+                            音素長スケーリングがあれば全体継続時間を掛けて算出
+                            なければデフォルト出力割合を全体継続時間に掛けて算出
+                        取得した継続時間を子音継続時間とする
+                    母音の場合
+                        音素を出力音素として取得
+                        継続時間を取得
+                            音素長スケーリングがあれば継続時間から割って算出
+                            なければデフォルト出力割合に従って算出
+                        継続時間と子音継続時間を取得し音素継続時間とする
+                        開始時間と音素継続時間を足して終了時間とする
+                        出力音素、開始時間、終了時間を出力配列に追加
         ]]
 
-        note_offset = self: convertNoteOffset100ns(note_offset)
+        local note_offset = self: convertNoteOffset100ns(note_offset_second)
+        local note_start = self: convertNoteOnSet100ns(note_onset_brick, time_axis)
+        local note_end = self: convertNoteEnd100ns(note_end_brick, time_axis)
+        local note_duration = note_end - note_start
+        local note_phonems = self: getPhonemsTableFromString(phonemes_string)
+        local default_ratio = self: getDefaultRatio(#note_phonems)
 
     end,
 
     convertNoteOffset100ns = function (self, note_offset)
         return self: secondTo100ns(note_offset)
+    end,
+
+    convertNoteOnSet100ns = function (self, onset_brick, time_axis)
+        local onset_second = time_axis: getSecondsFromBlick(onset_brick)
+        return  self: secondTo100ns(onset_second)
+    end,
+
+    convertNoteEnd100ns = function (self, end_brick, time_axis)
+        local end_second = time_axis: getSecondsFromBlick(end_brick)
+        return  self: secondTo100ns(end_second)
+    end,
+
+    getPhonemsTableFromString = function (self, phonemes_string)
+        return string.gmatch(phonemes_string, '%w+')
+    end,
+
+    getDefaultRatio = function (self, phonemes_num)
+        return (100 / phonemes_num) / 100
     end
 
 }
