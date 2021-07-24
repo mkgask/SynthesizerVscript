@@ -423,6 +423,9 @@ SynthVtoLab = {
 -- # Modules SynthV
 
 SynthV = {
+
+    -- Modules Track
+
     getTracks = function (self, project)
         local track_num = project: getNumTracks()
         local tracks = {}
@@ -438,9 +441,21 @@ SynthV = {
         return main_editor: getCurrentTrack(): getDisplayOrder()
     end,
 
+    -- Utilities
+
     secondTo100ns = function (self, second)
         return math.floor(second * 10000000)
     end,
+
+    inTable = function (self, search, table)
+        for index = 1, #table do
+            if table[index] == search then return true end
+        end
+
+        return false
+    end,
+
+    -- Modules Phonems for Group
 
     getPhonemesForGroup = function (self)
         local phonems_group = SV: getPhonemesForGroup()
@@ -452,6 +467,8 @@ SynthV = {
 
         return phonems_group
     end,
+
+    -- Modules Note Group
 
     getNoteGroup = function (self, track)
         local group_num = track: getNumGroups()
@@ -467,6 +484,8 @@ SynthV = {
 
         return note_groups
     end,
+
+    -- Modules Note
 
     getNumNotes = function (self, note_group)
         local notes_num = note_group: getNumNotes()
@@ -496,29 +515,76 @@ SynthV = {
 
             音素数分ループ
                 aiueoなら母音とする、それ以外は子音とする
-                    子音の場合
-                        開始時間を取得
-                        継続時間を取得
-                            音素長スケーリングがあれば全体継続時間を掛けて算出
-                            なければデフォルト出力割合を全体継続時間に掛けて算出
-                        取得した継続時間を子音継続時間とする
                     母音の場合
-                        音素を出力音素として取得
-                        継続時間を取得
-                            音素長スケーリングがあれば継続時間から割って算出
-                            なければデフォルト出力割合に従って算出
-                        継続時間と子音継続時間を取得し音素継続時間とする
-                        開始時間と音素継続時間を足して終了時間とする
-                        出力音素、開始時間、終了時間を出力配列に追加
+                        前回が子音なら
+                            音素を出力音素とする
+                            継続時間を取得
+                                音素長スケーリングがあれば継続時間から割って算出
+                                なければデフォルト出力割合に従って算出
+                            継続時間と子音継続時間を取得し音素継続時間とする
+                            開始時間と音素継続時間を足して終了時間とする
+                            出力音素、開始時間、終了時間を出力配列に追加
+                        前回が母音なら
+                            音素を出力音素とする
+                            開始時間を取得
+                            継続時間を取得
+                                音素長スケーリングがあれば継続時間から割って算出
+                                なければデフォルト出力割合に従って算出
+                            開始時間と継続時間を足して終了時間とする
+                            出力音素、開始時間、終了時間を出力配列に追加
+                        前回が無かったら
+                    子音の場合
+                        前回が子音なら
+                            デフォルト音素を出力音素とする
+                            継続時間を取得
+                                音素長スケーリングがあれば継続時間から割って算出
+                                なければデフォルト出力割合に従って算出
+                            開始時間と継続時間を足して終了時間とする
+                            出力音素、開始時間、終了時間を出力配列に追加
+                            開始時間を取得
+                        前回が母音なら
+                            開始時間を取得
+                            継続時間を取得
+                                音素長スケーリングがあれば全体継続時間を掛けて算出
+                                なければデフォルト出力割合を全体継続時間に掛けて算出
+                            取得した継続時間を子音継続時間とする
+                        前回が無かったら
         ]]
 
         local note_offset = self: convertNoteOffset100ns(note_offset_second)
         local note_start = self: convertNoteOnSet100ns(note_onset_brick, time_axis)
         local note_end = self: convertNoteEnd100ns(note_end_brick, time_axis)
         local note_duration = note_end - note_start
-        local note_phonems = self: getPhonemsTableFromString(phonemes_string)
-        local default_ratio = self: getDefaultRatio(#note_phonems)
+        local note_phonemes = self: getPhonemsTableFromString(phonemes_string)
+        local default_ratio = self: getDefaultRatio(#note_phonemes)
+        local vowels = { 'a', 'i', 'u', 'e', 'o' }
+        local undefined_vowel = 'n'
+        local note_info = {}
+        local old_note_info = {}
 
+        for index, phonemes in ipairs(note_phonemes) do
+            table.insert(note_info, index, {})
+
+            if self: inTable(phonemes, vowels) then
+                -- 母音の場合
+                if self: inTable(old_note_info.phonemes, vowels) then
+                    note_info[index] = createNoteInfoTypeVV()
+                else
+                    note_info[index] = createNoteInfoTypeVC()
+                end
+            else
+                -- 子音の場合
+                if self: inTable(old_note_info.phonemes, vowels) then
+                    note_info[index] = createNoteInfoTypeCV()
+                else
+                    note_info[index] = createNoteInfoTypeCC()
+                end
+            end
+
+            old_note_info = note_info[index]
+        end
+
+        return note_info
     end,
 
     convertNoteOffset100ns = function (self, note_offset)
