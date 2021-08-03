@@ -447,14 +447,6 @@ SynthV = {
         return math.floor(second * 10000000)
     end,
 
-    inTable = function (self, search, table)
-        for index = 1, #table do
-            if table[index] == search then return true end
-        end
-
-        return false
-    end,
-
     -- Modules Phonems for Group
 
     getPhonemesForGroup = function (self)
@@ -516,6 +508,14 @@ SynthV = {
             音素数分ループ
                 aiueoなら母音とする、それ以外は子音とする
                     母音の場合
+                        前回が母音なら
+                            音素を出力音素とする
+                            開始時間を取得
+                            継続時間を取得
+                                音素長スケーリングがあれば継続時間から割って算出
+                                なければデフォルト出力割合に従って算出
+                            開始時間と継続時間を足して終了時間とする
+                            出力音素、開始時間、終了時間を出力配列に追加
                         前回が子音なら
                             音素を出力音素とする
                             継続時間を取得
@@ -524,16 +524,14 @@ SynthV = {
                             継続時間と子音継続時間を取得し音素継続時間とする
                             開始時間と音素継続時間を足して終了時間とする
                             出力音素、開始時間、終了時間を出力配列に追加
-                        前回が母音なら
-                            音素を出力音素とする
-                            開始時間を取得
-                            継続時間を取得
-                                音素長スケーリングがあれば継続時間から割って算出
-                                なければデフォルト出力割合に従って算出
-                            開始時間と継続時間を足して終了時間とする
-                            出力音素、開始時間、終了時間を出力配列に追加
                         前回が無かったら
                     子音の場合
+                        前回が母音なら
+                            開始時間を取得
+                            継続時間を取得
+                                音素長スケーリングがあれば全体継続時間を掛けて算出
+                                なければデフォルト出力割合を全体継続時間に掛けて算出
+                            取得した継続時間を子音継続時間とする
                         前回が子音なら
                             デフォルト音素を出力音素とする
                             継続時間を取得
@@ -542,49 +540,69 @@ SynthV = {
                             開始時間と継続時間を足して終了時間とする
                             出力音素、開始時間、終了時間を出力配列に追加
                             開始時間を取得
-                        前回が母音なら
-                            開始時間を取得
-                            継続時間を取得
-                                音素長スケーリングがあれば全体継続時間を掛けて算出
-                                なければデフォルト出力割合を全体継続時間に掛けて算出
-                            取得した継続時間を子音継続時間とする
                         前回が無かったら
         ]]
 
-        local note_offset = self: convertNoteOffset100ns(note_offset_second)
-        local note_start = self: convertNoteOnSet100ns(note_onset_brick, time_axis)
-        local note_end = self: convertNoteEnd100ns(note_end_brick, time_axis)
-        local note_duration = note_end - note_start
-        local note_phonemes = self: getPhonemsTableFromString(phonemes_string)
-        local default_ratio = self: getDefaultRatio(#note_phonemes)
-        local vowels = { 'a', 'i', 'u', 'e', 'o' }
-        local undefined_vowel = 'n'
-        local note_info = {}
-        local old_note_info = {}
+        local synthv_note = SynthVNote: new({
+            note_offset_second = note_offset_second,
+            note_onset_brick = note_onset_brick,
+            time_axis = time_axis,
+            note_end_brick = note_end_brick,
+            note_phonemes = phonemes_string
+        })
 
-        for index, phonemes in ipairs(note_phonemes) do
-            table.insert(note_info, index, {})
+        local phonemes_list = {}
+        local old_phonemes = {}
 
-            if self: inTable(phonemes, vowels) then
+        for index, phonemes in ipairs(synthv_note.note_phonemes) do
+            table.insert(phonemes_list, index, {})
+
+            if synthv_note: inVowels(phonemes) then
                 -- 母音の場合
-                if self: inTable(old_note_info.phonemes, vowels) then
-                    note_info[index] = createNoteInfoTypeVV()
+                if synthv_note: inVowels(old_phonemes.phonemes) then
+                    phonemes_list[index] = createPhonemesInfoTypeVV()
                 else
-                    note_info[index] = createNoteInfoTypeVC()
+                    phonemes_list[index] = createPhonemesInfoTypeVC()
                 end
             else
                 -- 子音の場合
-                if self: inTable(old_note_info.phonemes, vowels) then
-                    note_info[index] = createNoteInfoTypeCV()
+                if synthv_note: inVowels(old_phonemes.phonemes) then
+                    phonemes_list[index] = createPhonemesInfoTypeCV()
                 else
-                    note_info[index] = createNoteInfoTypeCC()
+                    phonemes_list[index] = createPhonemesInfoTypeCC()
                 end
             end
 
-            old_note_info = note_info[index]
+            old_phonemes = phonemes_list[index]
         end
 
-        return note_info
+        return phonemes_list
+    end,
+
+}
+
+
+SynthVNote = {
+    new = function (self, note_info)
+
+        local note_offset = self: convertNoteOffset100ns(note_info.note_offset_second)
+        local note_start = self: convertNoteOnSet100ns(note_info.note_onset_brick, note_info.time_axis)
+        local note_end = self: convertNoteEnd100ns(note_info.note_end_brick, note_info.time_axis)
+        local note_phonemes = self: getPhonemsTableFromString(note_info.phonemes_string)
+        local default_ratio = self: getDefaultRatio(#note_phonemes)
+
+        local obj = {
+            note_offset = note_offset,
+            note_start = note_start,
+            note_end = note_end,
+            note_duration = note_end - note_start,
+            note_phonemes = note_phonemes,
+            default_ratio = default_ratio,
+            vowels = { 'a', 'i', 'u', 'e', 'o' },
+            undefined_vowel = 'n'
+        }
+
+        return setmetatable(obj, { __index = self })
     end,
 
     convertNoteOffset100ns = function (self, note_offset)
@@ -607,8 +625,34 @@ SynthV = {
 
     getDefaultRatio = function (self, phonemes_num)
         return (100 / phonemes_num) / 100
-    end
+    end,
 
+    inVowels = function (self, phonemes)
+        return self: inTable(phonemes, self.vowels)
+    end,
+
+    inTable = function (self, search, table)
+        for index = 1, #table do
+            if table[index] == search then return true end
+        end
+
+        return false
+    end
+}
+
+
+SynthVPhoneme = {
+    createPhonemesInfoTypeVV = function (self, newest, oldest)
+    end,
+    
+    createPhonemesInfoTypeVC = function (self, newest, oldest)
+    end,
+    
+    createPhonemesInfoTypeCV = function (self, newest, oldest)
+    end,
+
+    createPhonemesInfoTypeCC = function (self, newest, oldest)
+    end
 }
 
 
