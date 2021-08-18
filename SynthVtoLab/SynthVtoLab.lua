@@ -100,7 +100,7 @@ function getClientInfo()
     return {
         name = SV: T("Output *.lab file for PSDToolkit"),
         category = SV: T("Output"),
-        author = "@mkgask",
+        author = "@mkgask (twitter)",
         versionNumber = 0.1,
         minEditorVersion = 65540
     }
@@ -154,7 +154,7 @@ function main()
             Log: w("main() : track index : " .. Log: v(index))
 
             local track = synthv_to_lab.project: getTrack(index)
-            Log: w("main() : track : " .. tostring(track))
+            Log: w("main() : track : " .. Log: v(track))
 
             local track_name = string.gsub(track: getName(), '^%w+%s:%s', '')
             Log: w("main() : processing track name : " .. Log: v(track_name))
@@ -249,25 +249,32 @@ SynthVtoLab = {
         local lab_content = {}
 
         local time_axis = self.project: getTimeAxis()
-        local phonems_group = SynthV: getPhonemesForGroup()
 
         local target_track = self.tracks[track_number]
-        local note_groups = SynthV: getNoteGroup(target_track)
+        local note_groups_references = SynthV: getNoteGroupsWithReference(target_track)
+        Log: w("synthv_to_lab.craeteLabContent() : self.tracks : " .. Log: v(self.tracks))
+        Log: w("synthv_to_lab.craeteLabContent() : track_number : " .. Log: v(track_number))
+        Log: w("synthv_to_lab.craeteLabContent() : target_track : " .. Log: v(target_track))
+        Log: w("synthv_to_lab.craeteLabContent() : note_groups_references : " .. Log: v(note_groups_references))
 
-        for note_group in note_groups do
-            local notes_num = SynthV: getNumNotes(note_group)
+        for index, note_group_reference in ipairs(note_groups_references) do
+            Log: w("synthv_to_lab.craeteLabContent() : note_group_reference : " .. Log: v(note_group_reference))
+
+            local notes_num = SynthV: getNumNotes(note_group_reference.note_group)
+            local phonems_group = SynthV: getPhonemesForGroup(note_group_reference.group_reference)
+            Log: w("synthv_to_lab.craeteLabContent() : notes_num : " .. Log: v(notes_num))
 
             for index = 1, notes_num do
-                local note = note_group: getNote(index)
-                local base_phoneme = phonems_group(index)
+                local note = note_group_reference.note_group: getNote(index)
+                local base_phoneme = phonems_group[index]
+                Log: w("synthv_to_lab.craeteLabContent() : base_phoneme : " .. Log: v(base_phoneme))
 
                 local phonemes_list = SynthV: getPhonemesList(note, base_phoneme, time_axis)
-                table.insert(lab_content, SynthVPhonemes: toString(phonemes_list))
-
+                table.insert(lab_content, SynthVPhonemes: convertString(phonemes_list))
             end
         end
 
-        return table.concat(lab_content, "\n")
+        return table.concat(lab_content, "")
     end,
 
     str_split = function (self, str)
@@ -343,16 +350,10 @@ SynthV = {
         return main_editor: getCurrentTrack(): getDisplayOrder()
     end,
 
-    -- Utilities
-
-    secondTo100ns = function (self, second)
-        return math.floor(second * 10000000)
-    end,
-
     -- Modules Phonems for Group
 
-    getPhonemesForGroup = function (self)
-        local phonems_group = SV: getPhonemesForGroup()
+    getPhonemesForGroup = function (self, note_group_reference)
+        local phonems_group = SV: getPhonemesForGroup(note_group_reference)
         Log: w("SynthV.getPhonemesForGroup() : phonems_group : " .. tostring(phonems_group))
 
         for kpg, vpg in pairs(phonems_group) do
@@ -363,6 +364,25 @@ SynthV = {
     end,
 
     -- Modules Note Group
+
+    getNoteGroupsWithReference = function (self, track)
+        local group_num = track: getNumGroups()
+        Log: w("SynthV.getNoteGroupsWithReference() : track: getNumGroups() : " .. Log: v(group_num))
+
+        local note_groups_references = {}
+
+        for index = 1, group_num do
+            local group_reference = track: getGroupReference(index)
+            local note_group = group_reference: getTarget()
+
+            table.insert(note_groups_references, {
+                group_reference = group_reference,
+                note_group = note_group
+            })
+        end
+
+        return note_groups_references
+    end,
 
     getNoteGroup = function (self, track)
         local group_num = track: getNumGroups()
@@ -384,6 +404,7 @@ SynthV = {
     getNumNotes = function (self, note_group)
         local notes_num = note_group: getNumNotes()
         Log: w("SynthV.getNumNotes() : notes_num : " .. notes_num)
+        return notes_num
     end,
 
     getPhonemesList = function (self, note, base_phoneme, time_axis)
@@ -391,13 +412,14 @@ SynthV = {
         local note_durs = attr.dur
         local note_alts = attr.alt
         local note_offset_second = attr.tNoteOffset
+        if note_offset_second == nil then note_offset_second = 0 end
 
         local dur_all_brick = note: getDuration()
         local note_onset_brick = note: getOnset()
         local note_end_brick = note: getEnd()
         local phonemes_string = note: getPhonemes()
 
-        if not phonemes_string then phonemes_string = base_phoneme end
+        if 0 == #phonemes_string then phonemes_string = base_phoneme end
 
         --[[
             ノートオフセット取得（100ns）
@@ -446,6 +468,12 @@ SynthV = {
                         前回が無かったら
         ]]
 
+        Log: w("SynthV.getPhonemesList() : note_offset_second : " .. Log: v(note_offset_second))
+        Log: w("SynthV.getPhonemesList() : note_onset_brick : " .. Log: v(note_onset_brick))
+        Log: w("SynthV.getPhonemesList() : note_end_brick : " .. Log: v(note_end_brick))
+        Log: w("SynthV.getPhonemesList() : note_durs : " .. Log: v(note_durs))
+        Log: w("SynthV.getPhonemesList() : phonemes_string : " .. Log: v(phonemes_string))
+
         local synthv_note = SynthVNote: new({
             note_offset_second = note_offset_second,
             note_onset_brick = note_onset_brick,
@@ -473,25 +501,33 @@ SynthV = {
                 if synthv_note: inVowels(old_phonemes.phonemes) then
                     Log: w("SynthV.getNoteInfo() : vv")
                     -- 母母
-                    phonemes_list[index] = synthv_phonemes: createPhonemesInfoTypeVV(index, old_phonemes)
+                    --phonemes_list[index] = synthv_phonemes: createPhonemesInfoTypeVV(index, old_phonemes)
+                    old_phonemes = synthv_phonemes: createPhonemesInfoTypeVV(index, old_phonemes)
                 else
                     Log: w("SynthV.getNoteInfo() : vc")
-                    -- 母子
-                    phonemes_list[index] = synthv_phonemes: createPhonemesInfoTypeVC(index, old_phonemes)
+                    -- 子母
+                    --phonemes_list[index] = synthv_phonemes: createPhonemesInfoTypeVC(index, old_phonemes)
+                    old_phonemes = synthv_phonemes: createPhonemesInfoTypeCV(index, old_phonemes)
                 end
             else
                 if synthv_note: inVowels(old_phonemes.phonemes) then
                     Log: w("SynthV.getNoteInfo() : cv")
-                    -- 子母
-                    phonemes_list[index] = synthv_phonemes: createPhonemesInfoTypeCV(index, old_phonemes)
+                    -- 母子
+                    --phonemes_list[index] = synthv_phonemes: createPhonemesInfoTypeCV(index, old_phonemes)
+                    old_phonemes = synthv_phonemes: createPhonemesInfoTypeVC(index, old_phonemes)
                 else
                     Log: w("SynthV.getNoteInfo() : cc")
                     -- 子子
-                    phonemes_list[index] = synthv_phonemes: createPhonemesInfoTypeCC(index, old_phonemes)
+                    --phonemes_list[index] = synthv_phonemes: createPhonemesInfoTypeCC(index, old_phonemes)
+                    old_phonemes = synthv_phonemes: createPhonemesInfoTypeCC(index, old_phonemes)
                 end
             end
 
-            old_phonemes = phonemes_list[index]
+            -- old_phonemes = phonemes_list[index]
+
+            if old_phonemes.wait == false then
+                phonemes_list[index] = old_phonemes
+            end
         end
 
         return phonemes_list
@@ -505,15 +541,24 @@ SynthVNote = {
         local note_offset = self: convertNoteOffset100ns(note_info.note_offset_second)
         local note_start = self: convertNoteOnSet100ns(note_info.note_onset_brick, note_info.time_axis)
         local note_end = self: convertNoteEnd100ns(note_info.note_end_brick, note_info.time_axis)
-        local note_phonemes = self: getPhonemsTableFromString(note_info.phonemes_string)
+        local note_phonemes = self: getPhonemesTableFromString(note_info.note_phonemes)
         local default_ratio = self: getDefaultRatio(#note_phonemes)
+        local note_durs = note_info.note_durs
+
+        if not note_durs or 0 == #note_durs then
+            note_durs = {}
+
+            for index = 1, #note_phonemes do
+                table.insert(note_durs, default_ratio)
+            end
+        end
 
         local obj = {
             note_offset = note_offset,
             note_start = note_start,
             note_end = note_end,
             note_duration = note_end - note_start,
-            note_durs = note_info.note_durs,
+            note_durs = note_durs,
             note_phonemes = note_phonemes,
             default_ratio = default_ratio,
             vowels = { 'a', 'i', 'u', 'e', 'o' },
@@ -524,29 +569,59 @@ SynthVNote = {
     end,
 
     convertNoteOffset100ns = function (self, note_offset)
-        return self: secondTo100ns(note_offset)
+        Log: w("SynthVNote.convertNoteOffset100ns() : note_offset : " .. Log: v(note_offset))
+
+        local sto100ns = self: secondTo100ns(note_offset)
+        Log: w("SynthVNote.convertNoteOffset100ns() : sto100ns : " .. Log: v(sto100ns))
+        return sto100ns
     end,
 
     convertNoteOnSet100ns = function (self, onset_brick, time_axis)
         local onset_second = time_axis: getSecondsFromBlick(onset_brick)
-        return  self: secondTo100ns(onset_second)
+        Log: w("SynthVNote.convertNoteOnSet100ns() : onset_second : " .. Log: v(onset_second))
+        local sto100ns = self: secondTo100ns(onset_second)
+        Log: w("SynthVNote.convertNoteOnSet100ns() : sto100ns : " .. Log: v(sto100ns))
+        return sto100ns
     end,
 
     convertNoteEnd100ns = function (self, end_brick, time_axis)
         local end_second = time_axis: getSecondsFromBlick(end_brick)
-        return  self: secondTo100ns(end_second)
+        Log: w("SynthVNote.convertNoteEnd100ns() : end_second : " .. Log: v(end_second))
+        local sto100ns = self: secondTo100ns(end_second)
+        Log: w("SynthVNote.convertNoteEnd100ns() : sto100ns : " .. Log: v(sto100ns))
+        return sto100ns
     end,
 
-    getPhonemsTableFromString = function (self, phonemes_string)
-        return string.gmatch(phonemes_string, '%w+')
+    getPhonemesTableFromString = function (self, phonemes_string)
+        Log: w("SynthVNote.getPhonemesTableFromString() : phonemes_string : " .. Log: v(phonemes_string))
+        local split_str = {}
+
+        for word in string.gmatch(phonemes_string, '%w+') do
+            table.insert(split_str, word)
+        end
+
+        Log: w("SynthVNote.getPhonemesTableFromString() : split_str : " .. Log: v(split_str))
+        return split_str
     end,
 
     getDefaultRatio = function (self, phonemes_num)
-        return (100 / phonemes_num) / 100
+        Log: w("SynthVNote.getDefaultRatio() : phonemes_num : " .. Log: v(phonemes_num))
+        local ratio = (100 / phonemes_num) / 100
+        Log: w("SynthVNote.getDefaultRatio() : ratio : " .. Log: v(ratio))
+        return ratio
+    end,
+
+    -- Utilities
+
+    secondTo100ns = function (self, second)
+        return MathRound(second * 10000000)
     end,
 
     inVowels = function (self, phonemes)
-        return self: inTable(phonemes, self.vowels)
+        Log: w("SynthVNote.inVowels() : phonemes : " .. Log: v(phonemes))
+        local in_vowels = self: inTable(phonemes, self.vowels)
+        Log: w("SynthVNote.inVowels() : in_vowels : " .. Log: v(in_vowels))
+        return in_vowels
     end,
 
     inTable = function (self, search, table)
@@ -568,19 +643,21 @@ SynthVPhonemes = {
         return setmetatable(obj, { __index = self })
     end,
 
+    -- 母母
+    -- 両方そのまま登録でOK
     createPhonemesInfoTypeVV = function (self, index, oldest)
         local phoneme = self.note_info.note_phonemes[index]
         local start_time = oldest.end_time
 
-        Log: w("SynthV.createPhonemesInfoTypeCV() : self.note_info.note_durs[index] : " .. self.note_info.note_durs[index])
-        Log: w("SynthV.createPhonemesInfoTypeCV() : self.note_info.note_duration : " .. self.note_info.note_duration)
-        Log: w("SynthV.createPhonemesInfoTypeCV() : self.note_info.default_ratio : " .. self.note_info.default_ratio)
-        Log: w("SynthV.createPhonemesInfoTypeCV() : (self.note_info.note_duration / self.note_info.note_durs[index]) : " .. (self.note_info.note_duration / self.note_info.note_durs[index]))
-        Log: w("SynthV.createPhonemesInfoTypeCV() : (self.note_info.note_duration / self.note_info.default_ratio) : " .. (self.note_info.note_duration / self.note_info.default_ratio))
+        Log: w("SynthV.createPhonemesInfoTypeVV() : self.note_info.note_durs[index] : " .. self.note_info.note_durs[index])
+        Log: w("SynthV.createPhonemesInfoTypeVV() : self.note_info.note_duration : " .. self.note_info.note_duration)
+        Log: w("SynthV.createPhonemesInfoTypeVV() : self.note_info.default_ratio : " .. self.note_info.default_ratio)
+        Log: w("SynthV.createPhonemesInfoTypeVV() : (self.note_info.note_duration / self.note_info.note_durs[index]) : " .. (self.note_info.note_duration / self.note_info.note_durs[index]))
+        Log: w("SynthV.createPhonemesInfoTypeVV() : (self.note_info.note_duration / self.note_info.default_ratio) : " .. (self.note_info.note_duration / self.note_info.default_ratio))
 
-        local duration_time = self.note_info.note_durs[index] and
+        local duration_time = MathRound(self.note_info.note_durs[index] and
             (self.note_info.note_duration / self.note_info.note_durs[index]) or
-            self.note_info.note_duration / self.note_info.default_ratio
+            self.note_info.note_duration / self.note_info.default_ratio)
 
         local end_time = start_time + duration_time
 
@@ -588,16 +665,19 @@ SynthVPhonemes = {
             phoneme = phoneme,
             start_time = start_time,
             duration_time = duration_time,
-            end_time = end_time
+            end_time = end_time,
+            wait = false
         }
 
-        Log: w("SynthV.createPhonemesInfoTypeVV() : obj : " .. obj)
+        Log: w("SynthV.createPhonemesInfoTypeVV() : obj : " .. Log: v(obj, true))
         return obj
     end,
-    
-    createPhonemesInfoTypeVC = function (self, index, oldest)
-        local phoneme = self.note_info.note_phonemes[index]
-        local start_time = oldest.end_time
+
+    -- 子母
+    -- 子と母で一つとして登録
+    createPhonemesInfoTypeCV = function (self, index, oldest)
+        local phoneme = ''
+        local start_time = oldest.start_time
 
         Log: w("SynthV.createPhonemesInfoTypeCV() : self.note_info.note_durs[index] : " .. self.note_info.note_durs[index])
         Log: w("SynthV.createPhonemesInfoTypeCV() : self.note_info.note_duration : " .. self.note_info.note_duration)
@@ -605,7 +685,71 @@ SynthVPhonemes = {
         Log: w("SynthV.createPhonemesInfoTypeCV() : (self.note_info.note_duration / self.note_info.note_durs[index]) : " .. (self.note_info.note_duration / self.note_info.note_durs[index]))
         Log: w("SynthV.createPhonemesInfoTypeCV() : (self.note_info.note_duration / self.note_info.default_ratio) : " .. (self.note_info.note_duration / self.note_info.default_ratio))
 
-        local duration_time = (self.note_info.note_durs[index] and
+        local duration_time = MathRound(self.note_info.note_durs[index] and
+            (self.note_info.note_duration / self.note_info.note_durs[index]) or
+            self.note_info.note_duration / self.note_info.default_ratio)
+
+        local end_time = start_time + duration_time
+
+        local obj = {
+            phoneme = phoneme,
+            start_time = start_time,
+            duration_time = duration_time,
+            end_time = end_time,
+            wait = false
+        }
+
+        Log: w("SynthV.createPhonemesInfoTypeCV() : obj : " .. Log: v(obj, true))
+        return obj
+    end,
+
+    -- 母子
+    -- 母は登録、子は次を待つ
+    createPhonemesInfoTypeVC = function (self, index, oldest)
+        local phoneme = self.note_info.note_phonemes[index]
+        local start_time = oldest.end_time
+
+        Log: w("SynthV.createPhonemesInfoTypeVC() : index : " .. index)
+        Log: w("SynthV.createPhonemesInfoTypeVC() : phoneme : " .. phoneme)
+        Log: w("SynthV.createPhonemesInfoTypeVC() : start_time : " .. start_time)
+        Log: w("SynthV.createPhonemesInfoTypeVC() : self.note_info.note_durs[index] : " .. self.note_info.note_durs[index])
+        Log: w("SynthV.createPhonemesInfoTypeVC() : self.note_info.note_duration : " .. self.note_info.note_duration)
+        Log: w("SynthV.createPhonemesInfoTypeVC() : self.note_info.default_ratio : " .. self.note_info.default_ratio)
+        Log: w("SynthV.createPhonemesInfoTypeVC() : (self.note_info.note_duration / self.note_info.note_durs[index]) : " .. (self.note_info.note_duration / self.note_info.note_durs[index]))
+        Log: w("SynthV.createPhonemesInfoTypeVC() : (self.note_info.note_duration / self.note_info.default_ratio) : " .. (self.note_info.note_duration / self.note_info.default_ratio))
+
+        local duration_time = MathRound((self.note_info.note_durs[index] and
+            (self.note_info.note_duration / self.note_info.note_durs[index]) or
+            self.note_info.note_duration / self.note_info.default_ratio)
+            + oldest.duration_time)
+
+        local end_time = start_time + duration_time
+
+        local obj = {
+            phoneme = phoneme,
+            start_time = start_time,
+            duration_time = duration_time,
+            end_time = end_time,
+            wait = true
+        }
+
+        Log: w("SynthV.createPhonemesInfoTypeVC() : obj : " .. Log: v(obj, true))
+        return obj
+    end,
+
+    -- 子子
+    -- 開始時間をキープして次を待つ
+    createPhonemesInfoTypeCC = function (self, index, oldest)
+        local phoneme = self.note_info.undefined_vowel
+        local start_time = oldest.start_time
+
+        Log: w("SynthV.createPhonemesInfoTypeCC() : self.note_info.note_durs[index] : " .. self.note_info.note_durs[index])
+        Log: w("SynthV.createPhonemesInfoTypeCC() : self.note_info.note_duration : " .. self.note_info.note_duration)
+        Log: w("SynthV.createPhonemesInfoTypeCC() : self.note_info.default_ratio : " .. self.note_info.default_ratio)
+        Log: w("SynthV.createPhonemesInfoTypeCC() : (self.note_info.note_duration / self.note_info.note_durs[index]) : " .. (self.note_info.note_duration / self.note_info.note_durs[index]))
+        Log: w("SynthV.createPhonemesInfoTypeCC() : (self.note_info.note_duration / self.note_info.default_ratio) : " .. (self.note_info.note_duration / self.note_info.default_ratio))
+
+        local duration_time = MathRound(self.note_info.note_durs[index] and
             (self.note_info.note_duration / self.note_info.note_durs[index]) or
             self.note_info.note_duration / self.note_info.default_ratio)
             + oldest.duration_time
@@ -616,65 +760,26 @@ SynthVPhonemes = {
             phoneme = phoneme,
             start_time = start_time,
             duration_time = duration_time,
-            end_time = end_time
+            end_time = end_time,
+            wait = true
         }
 
-        Log: w("SynthV.createPhonemesInfoTypeVC() : obj : " .. obj)
+        Log: w("SynthV.createPhonemesInfoTypeCC() : obj : " .. Log: v(obj, true))
         return obj
     end,
 
-    createPhonemesInfoTypeCV = function (self, index, oldest)
-        local phoneme = ''
-        local start_time = oldest.end_time
+    convertString = function (self, phonemes_list)
+        local str = ''
 
-        Log: w("SynthV.createPhonemesInfoTypeCV() : self.note_info.note_durs[index] : " .. self.note_info.note_durs[index])
-        Log: w("SynthV.createPhonemesInfoTypeCV() : self.note_info.note_duration : " .. self.note_info.note_duration)
-        Log: w("SynthV.createPhonemesInfoTypeCV() : self.note_info.default_ratio : " .. self.note_info.default_ratio)
-        Log: w("SynthV.createPhonemesInfoTypeCV() : (self.note_info.note_duration / self.note_info.note_durs[index]) : " .. (self.note_info.note_duration / self.note_info.note_durs[index]))
-        Log: w("SynthV.createPhonemesInfoTypeCV() : (self.note_info.note_duration / self.note_info.default_ratio) : " .. (self.note_info.note_duration / self.note_info.default_ratio))
+        Log: w("SynthV.convertString() : phonemes_list : " .. Log: v(phonemes_list, true))
 
-        local duration_time = self.note_info.note_durs[index] and
-            (self.note_info.note_duration / self.note_info.note_durs[index]) or
-            self.note_info.note_duration / self.note_info.default_ratio
+        for index, phonemes in ipairs(phonemes_list) do
+            Log: w("SynthV.convertString() : phonemes : " .. Log: v(phonemes, true))
+            str = str .. phonemes.start_time .. ' ' .. phonemes.end_time .. ' ' .. phonemes.phoneme .. "\n"
+        end
 
-        local end_time = start_time + duration_time
-
-        local obj = {
-            phoneme = phoneme,
-            start_time = start_time,
-            duration_time = duration_time,
-            end_time = end_time
-        }
-
-        Log: w("SynthV.createPhonemesInfoTypeCV() : obj : " .. obj)
-        return obj
-    end,
-
-    createPhonemesInfoTypeCC = function (self, index, oldest)
-        local phoneme = self.note_info.undefined_vowel
-        local start_time = oldest.end_time
-
-        Log: w("SynthV.createPhonemesInfoTypeCV() : self.note_info.note_durs[index] : " .. self.note_info.note_durs[index])
-        Log: w("SynthV.createPhonemesInfoTypeCV() : self.note_info.note_duration : " .. self.note_info.note_duration)
-        Log: w("SynthV.createPhonemesInfoTypeCV() : self.note_info.default_ratio : " .. self.note_info.default_ratio)
-        Log: w("SynthV.createPhonemesInfoTypeCV() : (self.note_info.note_duration / self.note_info.note_durs[index]) : " .. (self.note_info.note_duration / self.note_info.note_durs[index]))
-        Log: w("SynthV.createPhonemesInfoTypeCV() : (self.note_info.note_duration / self.note_info.default_ratio) : " .. (self.note_info.note_duration / self.note_info.default_ratio))
-
-        local duration_time = self.note_info.note_durs[index] and
-            (self.note_info.note_duration / self.note_info.note_durs[index]) or
-            self.note_info.note_duration / self.note_info.default_ratio
-
-        local end_time = start_time + duration_time
-
-        local obj = {
-            phoneme = phoneme,
-            start_time = start_time,
-            duration_time = duration_time,
-            end_time = end_time
-        }
-
-        Log: w("SynthV.createPhonemesInfoTypeCC() : obj : " .. obj)
-        return obj
+        Log: w("SynthV.convertString() : str : " .. Log: v(str))
+        return str
     end
 }
 
@@ -913,6 +1018,10 @@ function showEndDialog()
     return SV: showMessageBox("end title", "end body")
 end
 
+
+MathRound = function (value)
+    return math.floor(value + 0.5)
+end
 
 
 -- # Utilities UTF8toSJIS
