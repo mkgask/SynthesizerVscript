@@ -616,12 +616,12 @@ SynthVPhonemes = {
         Log: w("SynthV.createPhonemesInfoTypeVV() : self.note_info.note_durs[index] : " .. self.note_info.note_durs[index])
         Log: w("SynthV.createPhonemesInfoTypeVV() : self.note_info.note_duration : " .. self.note_info.note_duration)
         Log: w("SynthV.createPhonemesInfoTypeVV() : self.note_info.default_ratio : " .. self.note_info.default_ratio)
-        Log: w("SynthV.createPhonemesInfoTypeVV() : (self.note_info.note_duration / self.note_info.note_durs[index]) : " .. (self.note_info.note_duration / self.note_info.note_durs[index]))
-        Log: w("SynthV.createPhonemesInfoTypeVV() : (self.note_info.note_duration / self.note_info.default_ratio) : " .. (self.note_info.note_duration / self.note_info.default_ratio))
+        Log: w("SynthV.createPhonemesInfoTypeVV() : (self.note_info.note_duration * self.note_info.note_durs[index]) : " .. (self.note_info.note_duration * self.note_info.note_durs[index]))
+        Log: w("SynthV.createPhonemesInfoTypeVV() : (self.note_info.note_duration * self.note_info.default_ratio) : " .. (self.note_info.note_duration * self.note_info.default_ratio))
 
         local duration_time = MathRound(self.note_info.note_durs[index] and
-            (self.note_info.note_duration / self.note_info.note_durs[index]) or
-            self.note_info.note_duration / self.note_info.default_ratio)
+            (self.note_info.note_duration * self.note_info.note_durs[index]) or
+            self.note_info.note_duration * self.note_info.default_ratio)
 
         local end_time = start_time + duration_time
 
@@ -649,12 +649,12 @@ SynthVPhonemes = {
             Log: w("SynthV.createPhonemesInfoTypeCV() : self.note_info.note_durs[index] : " .. self.note_info.note_durs[index])
             Log: w("SynthV.createPhonemesInfoTypeCV() : self.note_info.note_duration : " .. self.note_info.note_duration)
             Log: w("SynthV.createPhonemesInfoTypeCV() : self.note_info.default_ratio : " .. self.note_info.default_ratio)
-            Log: w("SynthV.createPhonemesInfoTypeCV() : (self.note_info.note_duration / self.note_info.note_durs[index]) : " .. (self.note_info.note_duration / self.note_info.note_durs[index]))
-            Log: w("SynthV.createPhonemesInfoTypeCV() : (self.note_info.note_duration / self.note_info.default_ratio) : " .. (self.note_info.note_duration / self.note_info.default_ratio))
+            Log: w("SynthV.createPhonemesInfoTypeCV() : (self.note_info.note_duration * self.note_info.note_durs[index]) : " .. (self.note_info.note_duration * self.note_info.note_durs[index]))
+            Log: w("SynthV.createPhonemesInfoTypeCV() : (self.note_info.note_duration * self.note_info.default_ratio) : " .. (self.note_info.note_duration * self.note_info.default_ratio))
 
             local duration_time = MathRound(self.note_info.note_durs[index] and
-                (self.note_info.note_duration / self.note_info.note_durs[index]) or
-                self.note_info.note_duration / self.note_info.default_ratio)
+                (self.note_info.note_duration * self.note_info.note_durs[index]) or
+                self.note_info.note_duration * self.note_info.default_ratio)
 
             local end_time = start_time + duration_time
 
@@ -682,12 +682,18 @@ SynthVPhonemes = {
         Log: w("SynthV.createPhonemesInfoTypeCV() : self.note_info.note_durs[index] : " .. self.note_info.note_durs[index])
         Log: w("SynthV.createPhonemesInfoTypeCV() : self.note_info.note_duration : " .. self.note_info.note_duration)
         Log: w("SynthV.createPhonemesInfoTypeCV() : self.note_info.default_ratio : " .. self.note_info.default_ratio)
-        Log: w("SynthV.createPhonemesInfoTypeCV() : (self.note_info.note_duration / self.note_info.note_durs[index]) : " .. (self.note_info.note_duration / self.note_info.note_durs[index]))
-        Log: w("SynthV.createPhonemesInfoTypeCV() : (self.note_info.note_duration / self.note_info.default_ratio) : " .. (self.note_info.note_duration / self.note_info.default_ratio))
+        Log: w("SynthV.createPhonemesInfoTypeCV() : (self.note_info.note_duration * self.note_info.note_durs[index]) : " .. (self.note_info.note_duration * self.note_info.note_durs[index]))
+        Log: w("SynthV.createPhonemesInfoTypeCV() : (self.note_info.note_duration * self.note_info.default_ratio) : " .. (self.note_info.note_duration * self.note_info.default_ratio))
+
+        Log: w("SynthV.createPhonemesInfoTypeCV() : (self.note_info.note_duration * self.note_info.note_durs[index - 1]) : " .. (self.note_info.note_duration * self.note_info.note_durs[index - 1]))
 
         local duration_time = MathRound(self.note_info.note_durs[index] and
-            (self.note_info.note_duration / self.note_info.note_durs[index]) or
-            self.note_info.note_duration / self.note_info.default_ratio)
+            (self.note_info.note_duration * self.note_info.note_durs[index]) or
+            self.note_info.note_duration * self.note_info.default_ratio)
+
+        duration_time = duration_time + MathRound(self.note_info.note_durs[index - 1] and
+            (self.note_info.note_duration * self.note_info.note_durs[index - 1]) or
+            self.note_info.note_duration * self.note_info.default_ratio)
 
         local end_time = start_time + duration_time
 
@@ -715,12 +721,12 @@ SynthVPhonemes = {
         Log: w("SynthV.createPhonemesInfoTypeVC() : self.note_info.note_durs[index] : " .. self.note_info.note_durs[index])
         Log: w("SynthV.createPhonemesInfoTypeVC() : self.note_info.note_duration : " .. self.note_info.note_duration)
         Log: w("SynthV.createPhonemesInfoTypeVC() : self.note_info.default_ratio : " .. self.note_info.default_ratio)
-        Log: w("SynthV.createPhonemesInfoTypeVC() : (self.note_info.note_duration / self.note_info.note_durs[index]) : " .. (self.note_info.note_duration / self.note_info.note_durs[index]))
-        Log: w("SynthV.createPhonemesInfoTypeVC() : (self.note_info.note_duration / self.note_info.default_ratio) : " .. (self.note_info.note_duration / self.note_info.default_ratio))
+        Log: w("SynthV.createPhonemesInfoTypeVC() : (self.note_info.note_duration * self.note_info.note_durs[index]) : " .. (self.note_info.note_duration * self.note_info.note_durs[index]))
+        Log: w("SynthV.createPhonemesInfoTypeVC() : (self.note_info.note_duration * self.note_info.default_ratio) : " .. (self.note_info.note_duration * self.note_info.default_ratio))
 
         local duration_time = MathRound((self.note_info.note_durs[index] and
-            (self.note_info.note_duration / self.note_info.note_durs[index]) or
-            self.note_info.note_duration / self.note_info.default_ratio)
+            (self.note_info.note_duration * self.note_info.note_durs[index]) or
+            self.note_info.note_duration * self.note_info.default_ratio)
             + oldest.duration_time)
 
         local end_time = start_time + duration_time
