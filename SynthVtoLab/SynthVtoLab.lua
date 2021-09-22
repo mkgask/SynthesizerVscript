@@ -758,7 +758,7 @@ SynthVPhonemes = {
             Log: w("SynthV.createPhonemesInfoTypeCC() : self.note_info.default_ratio : " .. self.note_info.default_ratio)
             Log: w("SynthV.createPhonemesInfoTypeCC() : (self.note_info.note_duration / self.note_info.note_durs[index]) : " .. (self.note_info.note_duration / self.note_info.note_durs[index]))
             Log: w("SynthV.createPhonemesInfoTypeCC() : (self.note_info.note_duration / self.note_info.default_ratio) : " .. (self.note_info.note_duration / self.note_info.default_ratio))
-    
+
             local duration_time = MathRound(self.note_info.note_durs[index] and
                 (self.note_info.note_duration / self.note_info.note_durs[index]) or
                 self.note_info.note_duration / self.note_info.default_ratio)
@@ -1072,7 +1072,7 @@ end
 
 --- https://github.com/AoiSaya/FlashAir_UTF8toSJIS/
 
-UTF8toSJIS_table_path = "libs/Utf8Sjis.tbl"
+UTF8toSJIS_table_path = "pluginLibs/SynthVtoLab/Utf8Sjis.tbl"
 UTF8toSJIS_table = io.open(UTF8toSJIS_table_path, "rb")
 
 --[[
