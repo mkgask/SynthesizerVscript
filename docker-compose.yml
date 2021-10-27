@@ -1,0 +1,10 @@
+version: "3.9"
+
+services:
+    act:
+        # tty: true
+        build:
+          context: ./
+          dockerfile: dockerfile
+        volumes:
+            - ./:/home/act/SynthesizerVscript
