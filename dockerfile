@@ -6,4 +6,4 @@ RUN apk --no-cache add \
 
 RUN curl https://raw.githubusercontent.com/nektos/act/master/install.sh | bash
 
-CMD cd /home/act/SynthesizerVscript && act -n
+CMD /bin/sh
