@@ -7,8 +7,7 @@ This repository plans the following Synthesizer V scripts.
 
 ## SynthVtoLab
 
-AviUtlのPSDToolkitで使う口パク準備（音素のみ）を生成するlabファイルを出力  
-曲中でのBPM変更も対応済みのはずです  
+AviUtlのPSDToolkitで使う口パク準備（音素のみ）を生成するlabファイルを出力
 ~~多分ほぼ完成~~
 
 Output lab file for lip-sync preparation (phonemes only) used in PSDToolkit in AviUtl.  
@@ -30,12 +29,12 @@ Under planning.
 1. このページの緑のCodeボタンからzipファイルをダウンロード＆展開してください。
 1. pluginLibsフォルダをSynthesizer Vの実行ファイルがあるフォルダにコピーしてください。
 1. SynthVtoLabフォルダをSynthesiver Vのscriptsフォルダへコピーしてください。
-1. Synthesizer Vを起動すると、上部メニューのスクリプトに「SynthV to Lab」が増えているので、用途に合わせてご利用ください。
+1. Synthesizer Vを起動すると、上部メニューのスクリプトに「出力」->「PSDToolkit用の*.labファイルを出力」が増えているので、用途に合わせてご利用ください。
 ---
 1. Zipfile download and expand where green "Code" button in this page.
 1. Copy to pluginLibs folder to same directory in Synthesizer V execution file.
 1. Copy to SynthVtoLab folder to Synthesizer V scripts folder.
-1. Use it according to your needs "Synth V to Lab" are added to the script in the top menu when you start Synthesizer V.
+1. Use it according to your needs "Output" -> "Output *.lab file for PSDToolkit" are added to the script in the top menu when you start Synthesizer V.
 <!--
 1. リリースページからzipファイルをダウンロード・展開してください。
 1. pluginLibsフォルダをSynthesizer Vの実行ファイルがあるフォルダにコピーしてください。
