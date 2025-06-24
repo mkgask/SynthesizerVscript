@@ -29,12 +29,12 @@ function getTranslations(langCode)
             { "Output settings track", "出力設定" },
             { "It will be saved in the same directory as the project file.", "プロジェクトファイルと同じディレクトリに保存されます" },
             { "Select track", "出力するトラックを選択" },
-            { "Output with log (May requrie more time for output)", "ログも一緒に出力（出力にかかる時間が増える場合があります）" },
+            { "Output with log (May require more time for output)", "ログも一緒に出力（出力にかかる時間が増える場合があります）" },
             { "Consonants integrated into vowels for output ", "子音を母音に統合して出力" },
 
             { "all: all track", "all: 全トラック" },
 
-            { "Failed  open logfile", "ログファイルが開けませんでした" }
+            { "Failed open log file", "ログファイルが開けませんでした" }
         }
     end
 
@@ -1087,7 +1087,7 @@ LogBase = {
         self.logfile = io.open(self.log_path_sjis, "w")
 
         if self.logfile == nil then
-            SV: showMessageBox("!", SV: T("Failed open logfile : " .. self.log_path_sjis))
+            SV: showMessageBox("!", SV: T("Failed open log file : " .. self.log_path_sjis))
             return self.disable()
         end
 
@@ -1245,7 +1245,7 @@ OutputSettingsDialog = {
                 {
                   name = "logsave",
                   type = "CheckBox",
-                  text = SV: T("Output with log (May requrie more time for output)"),
+                  text = SV: T("Output with log (May require more time for output)"),
                   default = false
                 }
             }
