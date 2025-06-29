@@ -65,7 +65,7 @@ I used it to save to a file path including Japanese
 
 ## History  --  更新履歴
 
-2025/06/29 v2 Synthesizer V Studio 2 Pro 仮対応
+2025/06/29 v2 Synthesizer V Studio 2 Pro 仮対応  
 2022/04/25 v1 初版
 
 
