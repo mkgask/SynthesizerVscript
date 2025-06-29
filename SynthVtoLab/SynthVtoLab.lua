@@ -34,7 +34,11 @@ function getTranslations(langCode)
 
             { "all: all track", "all: 全トラック" },
 
-            { "Failed open log file", "ログファイルが開けませんでした" }
+            { "Failed open log file", "ログファイルが開けませんでした" },
+
+            { "Finish", "完了" },
+            { "End output lab file", "labファイルを出力しました" },
+            { "Debug log file", "デバッグログファイル" }
         }
     end
 
@@ -130,6 +134,13 @@ function main()
     end
 
     synthv_to_lab: closeLog()
+
+    if output_dialog_result.answers.logsave then
+        showEndDialog(synthv_to_lab.lab_path .. "\n\n" .. SV: T("Debug log file") .. "\n" .. synthv_to_lab.log_path)
+    else
+        showEndDialog(synthv_to_lab.lab_path)
+    end
+
     return SV: finish()
 end
 
@@ -361,6 +372,18 @@ SynthV = {
         return notes_num
     end,
 
+    getPhonemesTableFromString = function (self, phonemes_string)
+        Log: w("SynthV.getPhonemesTableFromString() : phonemes_string : " .. Log: v(phonemes_string))
+        local split_str = {}
+
+        for word in string.gmatch(phonemes_string, '%w+') do
+            table.insert(split_str, word)
+        end
+
+        Log: w("SynthV.getPhonemesTableFromString() : split_str : " .. Log: v(split_str))
+        return split_str
+    end,
+
     getPhonemesListNotIntegrated = function (self, note, base_phoneme, time_axis)
         local attr = note: getAttributes()
         local note_durs = attr.dur
@@ -368,20 +391,33 @@ SynthV = {
         local note_offset_second = attr.tNoteOffset
         if note_offset_second == nil then note_offset_second = 0 end
 
-        local dur_all_brick = note: getDuration()
         local note_onset_brick = note: getOnset()
         local note_end_brick = note: getEnd()
+        local dur_all_brick = note: getDuration()
         local phonemes_string = note: getPhonemes()
 
         if 0 == #phonemes_string then phonemes_string = base_phoneme end
 
         Log: w("SynthV.getPhonemesListNotIntegrated() : note : " .. Log: v(note, true))
         Log: w("SynthV.getPhonemesListNotIntegrated() : attr : " .. Log: v(attr, true))
+        Log: w("SynthV.getPhonemesListNotIntegrated() : note_durs : " .. Log: v(note_durs))
         Log: w("SynthV.getPhonemesListNotIntegrated() : note_offset_second : " .. Log: v(note_offset_second))
         Log: w("SynthV.getPhonemesListNotIntegrated() : note_onset_brick : " .. Log: v(note_onset_brick))
         Log: w("SynthV.getPhonemesListNotIntegrated() : note_end_brick : " .. Log: v(note_end_brick))
-        Log: w("SynthV.getPhonemesListNotIntegrated() : note_durs : " .. Log: v(note_durs))
+        Log: w("SynthV.getPhonemesListNotIntegrated() : dur_all_brick : " .. Log: v(dur_all_brick))
         Log: w("SynthV.getPhonemesListNotIntegrated() : phonemes_string : " .. Log: v(phonemes_string))
+
+        phonemes_string = self: getPhonemesTableFromString(phonemes_string)
+        Log: w("SynthV.getPhonemesListNotIntegrated() : phonemes_string : " .. Log: v(phonemes_string))
+
+        -- note_dursがnilだったらtableにして#phonemes_string分だけ1を入れる
+        if type(note_durs) == "nil" or note_durs == nil then
+            note_durs = {}
+
+            for i = 1, #phonemes_string do
+                table.insert(note_durs, 1)
+            end
+        end
 
         --[[
             ノートオフセット取得（100ns）
@@ -452,18 +488,31 @@ SynthV = {
         local note_offset_second = attr.tNoteOffset
         if note_offset_second == nil then note_offset_second = 0 end
 
-        local dur_all_brick = note: getDuration()
         local note_onset_brick = note: getOnset()
         local note_end_brick = note: getEnd()
+        local dur_all_brick = note: getDuration()
         local phonemes_string = note: getPhonemes()
 
         if 0 == #phonemes_string then phonemes_string = base_phoneme end
 
+        Log: w("SynthV.getPhonemesListIntegrated() : note_durs : " .. Log: v(note_durs, true))
         Log: w("SynthV.getPhonemesListIntegrated() : note_offset_second : " .. Log: v(note_offset_second))
         Log: w("SynthV.getPhonemesListIntegrated() : note_onset_brick : " .. Log: v(note_onset_brick))
         Log: w("SynthV.getPhonemesListIntegrated() : note_end_brick : " .. Log: v(note_end_brick))
-        Log: w("SynthV.getPhonemesListIntegrated() : note_durs : " .. Log: v(note_durs, true))
+        Log: w("SynthV.getPhonemesListIntegrated() : dur_all_brick : " .. Log: v(dur_all_brick))
         Log: w("SynthV.getPhonemesListIntegrated() : phonemes_string : " .. Log: v(phonemes_string))
+
+        phonemes_string = self: getPhonemesTableFromString(phonemes_string)
+        Log: w("SynthV.getPhonemesListNotIntegrated() : phonemes_string : " .. Log: v(phonemes_string))
+
+        -- note_dursがnilだったらtableにして#phonemes_string分だけ1を入れる
+        if type(note_durs) == "nil" or note_durs == nil then
+            note_durs = {}
+
+            for i = 1, #phonemes_string do
+                table.insert(note_durs, 1)
+            end
+        end
 
         --[[
             ノートオフセット取得（100ns）
@@ -588,8 +637,6 @@ SynthV = {
             old_phonemes = append_phonemes[#append_phonemes]
         end
 
-
-
         return phonemes_list
     end,
 
@@ -602,7 +649,7 @@ SynthVNote = {
         local note_offset = self: convertNoteOffset100ns(note_info.note_offset_second)
         local note_start = self: convertNoteOnSet100ns(note_info.note_onset_brick, note_info.time_axis)
         local note_end = self: convertNoteEnd100ns(note_info.note_end_brick, note_info.time_axis)
-        local note_phonemes = self: getPhonemesTableFromString(note_info.note_phonemes)
+        local note_phonemes = note_info.note_phonemes
         local default_ratio = self: getDefaultRatio(#note_phonemes)
         local note_durs = note_info.note_durs
         local dur_total = 0
@@ -684,18 +731,6 @@ SynthVNote = {
         local sto100ns = self: secondTo100ns(end_second)
         Log: w("SynthVNote.convertNoteEnd100ns() : sto100ns : " .. Log: v(sto100ns))
         return sto100ns
-    end,
-
-    getPhonemesTableFromString = function (self, phonemes_string)
-        Log: w("SynthVNote.getPhonemesTableFromString() : phonemes_string : " .. Log: v(phonemes_string))
-        local split_str = {}
-
-        for word in string.gmatch(phonemes_string, '%w+') do
-            table.insert(split_str, word)
-        end
-
-        Log: w("SynthVNote.getPhonemesTableFromString() : split_str : " .. Log: v(split_str))
-        return split_str
     end,
 
     getDefaultRatio = function (self, phonemes_num)
@@ -1260,8 +1295,8 @@ OutputSettingsDialog = {
 --- Show end dialog to OkCandelDialog
 --- show process end message
 --- @return any
-function showEndDialog()
-    return SV: showMessageBox("end title", "end body")
+function showEndDialog(messge)
+    return SV: showMessageBox(SV: T("Finish"), SV: T("End output lab file") .."\n" .. messge)
 end
 
 

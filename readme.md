@@ -1,8 +1,9 @@
 # Synthesizer V script
 
-このリポジトリは以下のSynthesizer Vスクリプトを設置予定です。
+このリポジトリは以下のSynthesizer Vスクリプトを設置予定です。（今のところv1、v2両対応）
 
-This repository plans the following Synthesizer V scripts.
+This repository plans the following Synthesizer V scripts. (Currently compatible with both v1 and v2)
+
 
 
 ## SynthVtoLab
@@ -15,6 +16,7 @@ BPM change in the song should have been supported.
 ~~Maybe almost Completed.~~
 
 
+
 ## SynthVtoVmd
 
 MMDで使う表情モーション用のvmdファイルを出力  
@@ -24,7 +26,8 @@ Output vmd file for facial expression motion used in MMD.
 Under planning.
 
 
-# Script usage - スクリプトの使い方
+
+## Script usage - スクリプトの使い方
 
 1. このページの緑のCodeボタンからzipファイルをダウンロード＆展開してください。
 1. pluginLibsフォルダをSynthesizer Vの実行ファイルがあるフォルダにコピーしてください。
@@ -47,6 +50,8 @@ Under planning.
 1. Use it according to your needs "Synth V to Lab", "Synth V to Vmd", or both are added to the script in the top menu when you start Synthesizer V.
 -->
 
+
+
 ## Reference  --  参考文献
 
 AoiSaya/FlashAir_UTF8toSJIS: FlashAir library to convert from UTF-8 to Shift _ JIS  
@@ -55,3 +60,12 @@ https://github.com/AoiSaya/FlashAir_UTF8toSJIS/
 日本語を含むファイルパスへの保存に使わせていただきました
 
 I used it to save to a file path including Japanese
+
+
+
+## History  --  更新履歴
+
+2025/06/29 v2 Synthesizer V Studio 2 Pro 仮対応
+2022/04/25 v1 初版
+
+
