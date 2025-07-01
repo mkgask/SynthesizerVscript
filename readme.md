@@ -61,7 +61,7 @@ https://github.com/AoiSaya/FlashAir_UTF8toSJIS/
 
 I used it to save to a file path including Japanese
 
-SynthV_scripts/snippets/lua.code-snippets at master · Yukikazari/SynthV_scripts
+SynthV_scripts/snippets/lua.code-snippets at master · Yukikazari/SynthV_scripts  
 https://github.com/Yukikazari/SynthV_scripts/blob/master/snippets/lua.code-snippets
 
 VS CodeでのSynthesizer Vスクリプト開発に必須です
@@ -73,7 +73,7 @@ Required for developing Synthesizer V scripts in VS Code
 ## History  --  更新履歴
 
 2025/07/02 v2.0.1 軽微な修正    Minor fixes.  
-2025/06/29 v2 Synthesizer V Studio 2 Pro 仮対応    Provisional response.
+2025/06/29 v2 Synthesizer V Studio 2 Pro 仮対応    Provisional response.  
 2022/04/25 v1 初版    First version.  
 
 
