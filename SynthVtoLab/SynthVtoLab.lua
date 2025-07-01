@@ -9,7 +9,7 @@ function getClientInfo()
     return {
         name = SV: T("Output *.lab file for PSDToolkit"),
         category = SV: T("Output"),
-        author = "@mkgask (twitter)",
+        author = "@mkgask (https://x.com/mkgask)",
         versionNumber = 0.1,
         minEditorVersion = 65540
     }
@@ -1096,7 +1096,7 @@ LogBase = {
 
 プロジェクトファイルのパスに日本語が含まれている場合、ログ出力を行うことができません
 
-必要な場合はlibsフォルダをSynthesizer V実行ファイルのあるフォルダに設置してください
+必要な場合はpluginLibsフォルダをSynthesizer V実行ファイルのあるフォルダに設置してください
                 ]])
 
                 obj.enable = false
