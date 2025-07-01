@@ -52,6 +52,14 @@ Under planning.
 
 
 
+## Precautions - 注意事項
+
+ボーカルのライセンスが切れているトラックを指定すると、Synthesizer Vから情報が取得できず、エラーが発生します
+
+If you specify a track with an expired vocal license, script got an error because will not be able to retrieve the information from Synthesizer V.
+
+
+
 ## Special Thanks  --  深謝
 
 AoiSaya/FlashAir_UTF8toSJIS: FlashAir library to convert from UTF-8 to Shift _ JIS  
